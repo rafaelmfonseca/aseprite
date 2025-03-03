@@ -47,7 +47,6 @@ public:
     , m_fullpath(file)
     , m_name(base::get_file_name(file))
     , m_path(base::get_file_path(file))
-    , m_hidden(false)
     , m_pinned(pinned)
   {
     initTheme();
@@ -65,16 +64,6 @@ public:
   void onScrollRegion(ui::ScrollRegionEvent& ev)
   {
     ev.region() -= gfx::Region(pinBounds(bounds()));
-  }
-
-  void hide()
-  {
-    m_hidden = true;
-  }
-
-  void show()
-  {
-    m_hidden = false;
   }
 
 protected:
@@ -257,7 +246,6 @@ private:
   std::string m_name;
   std::string m_path;
   bool m_pinned;
-  bool m_hidden;
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -319,26 +307,22 @@ RecentFilesListBox::RecentFilesListBox()
 
 void RecentFilesListBox::filter(const std::string& text)
 {
-  // hide the first one
-  /*
-  if (auto child = firstChild())
-    static_cast<RecentFileItem*>(child)->hide();
-  */
+  m_filter = text;
 
-  removeAllChildren();
-
-  auto firstRecentFiles = App::instance()->recentFiles()->recentFiles().begin();
-
-  addChild(new RecentFileItem(*firstRecentFiles, true));
+  App::instance()->recentFiles()->Changed();
 }
 
 void RecentFilesListBox::onRebuildList()
 {
   auto recent = App::instance()->recentFiles();
-  for (const auto& fn : recent->pinnedFiles())
+  for (const auto& fn : recent->pinnedFiles()) {
     addChild(new RecentFileItem(fn, true));
-  for (const auto& fn : recent->recentFiles())
-    addChild(new RecentFileItem(fn, false));
+  }
+  for (const auto& fn : recent->recentFiles()) {
+    if (fn.find(m_filter) != std::string::npos) {
+      addChild(new RecentFileItem(fn, false));
+    }
+  }
 }
 
 void RecentFilesListBox::onClick(const std::string& path)

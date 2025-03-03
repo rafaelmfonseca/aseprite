@@ -47,6 +47,7 @@ class RecentFilesListBox : public RecentListBox {
 public:
   RecentFilesListBox();
   void filter(const std::string& text);
+  std::string m_filter;
 
 private:
   void onRebuildList() override;
