@@ -315,14 +315,11 @@ void RecentFilesListBox::filter(const std::string& text)
 void RecentFilesListBox::onRebuildList()
 {
   auto recent = App::instance()->recentFiles();
-  for (const auto& fn : recent->pinnedFiles()) {
+  for (const auto& fn : recent->pinnedFiles())
     addChild(new RecentFileItem(fn, true));
-  }
-  for (const auto& fn : recent->recentFiles()) {
-    if (fn.find(m_filter) != std::string::npos) {
+  for (const auto& fn : recent->recentFiles())
+    if (fn.find(m_filter) != std::string::npos)
       addChild(new RecentFileItem(fn, false));
-    }
-  }
 }
 
 void RecentFilesListBox::onClick(const std::string& path)
