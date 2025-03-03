@@ -75,6 +75,10 @@ HomeView::HomeView()
   newsView()->attachToView(m_news);
 #endif
 
+  searchFiles()->Change.connect([this] {
+    m_files->filter(searchFiles()->text());
+  });
+
   checkUpdate()->setVisible(false);
   shareCrashdb()->setVisible(false);
 

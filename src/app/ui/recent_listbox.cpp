@@ -47,6 +47,7 @@ public:
     , m_fullpath(file)
     , m_name(base::get_file_name(file))
     , m_path(base::get_file_path(file))
+    , m_hidden(false)
     , m_pinned(pinned)
   {
     initTheme();
@@ -64,6 +65,16 @@ public:
   void onScrollRegion(ui::ScrollRegionEvent& ev)
   {
     ev.region() -= gfx::Region(pinBounds(bounds()));
+  }
+
+  void hide()
+  {
+    m_hidden = true;
+  }
+
+  void show()
+  {
+    m_hidden = false;
   }
 
 protected:
@@ -91,6 +102,7 @@ protected:
 
   bool onProcessMessage(Message* msg) override
   {
+    /*
     switch (msg->type()) {
       case kMouseDownMessage: {
         const gfx::Point mousePos = static_cast<MouseMessage*>(msg)->position();
@@ -134,6 +146,7 @@ protected:
         break;
       }
     }
+    */
     return DraggableWidget<LinkLabel>::onProcessMessage(msg);
   }
 
@@ -155,6 +168,7 @@ protected:
       theme->paintWidget(g, this, styleDetail, detailsBounds);
     }
 
+    /*
     if (!isDragging() && (m_pinned || hasMouse())) {
       ui::Style* pinStyle = theme->styles.recentFilePin();
       const gfx::Rect pinBounds = this->pinBounds(bounds);
@@ -164,6 +178,7 @@ protected:
                       (hasMouse() ? ui::Style::Layer::kMouse : 0);
       theme->paintWidgetPart(g, pinStyle, pinBounds, pi);
     }
+    */
   }
 
   void onClick() override
@@ -242,6 +257,7 @@ private:
   std::string m_name;
   std::string m_path;
   bool m_pinned;
+  bool m_hidden;
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -299,6 +315,21 @@ void RecentListBox::onScrollRegion(ui::ScrollRegionEvent& ev)
 RecentFilesListBox::RecentFilesListBox()
 {
   onRebuildList();
+}
+
+void RecentFilesListBox::filter(const std::string& text)
+{
+  // hide the first one
+  /*
+  if (auto child = firstChild())
+    static_cast<RecentFileItem*>(child)->hide();
+  */
+
+  removeAllChildren();
+
+  auto firstRecentFiles = App::instance()->recentFiles()->recentFiles().begin();
+
+  addChild(new RecentFileItem(*firstRecentFiles, true));
 }
 
 void RecentFilesListBox::onRebuildList()
