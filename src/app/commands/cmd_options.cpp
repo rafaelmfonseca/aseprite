@@ -110,6 +110,11 @@ class OptionsWindow : public app::gen::Options {
     os::ColorSpaceRef m_cs;
   };
 
+  class ArtFolderItem : public ListItem {
+  public:
+    ArtFolderItem(const std::string& text) : ListItem(text) {}
+  };
+
   class ThemeItem : public ListItem {
   public:
     ThemeItem(const std::string& id,
@@ -451,6 +456,9 @@ public:
     disableExtension()->Click.connect([this] { onDisableExtension(); });
     uninstallExtension()->Click.connect([this] { onUninstallExtension(); });
     openExtensionFolder()->Click.connect([this] { onOpenExtensionFolder(); });
+
+    // User custom buttons
+    addArtFolder()->Click.connect([this] { onAddArtFolder(); });
 
     // Reset checkboxes
 
@@ -1847,6 +1855,36 @@ private:
     ExtensionItem* item = dynamic_cast<ExtensionItem*>(extensionsList()->getSelectedChild());
     if (item)
       item->openFolder();
+  }
+
+  void onAddArtFolder()
+  {
+    base::paths exts = { "aseprite", "png" };
+    base::paths filename;
+    if (!app::show_file_selector(Strings::keyboard_shortcuts_add(),
+                                 "",
+                                 exts,
+                                 FileSelectorType::Open,
+                                 filename))
+      return;
+
+    ASSERT(!filename.empty());
+    
+    std::string outputPath = base::get_file_path(filename.front());
+
+    // ui::Alert::show(outputPath);
+
+    ArtFolderItem* listItem = new ArtFolderItem(outputPath);
+    artFoldersList()->addChild(listItem);
+    artFoldersList()->layout();
+    artFoldersList()->selectChild(listItem);
+
+    try {
+      App::instance()->recentFiles()->addFavoriteFolder(outputPath);
+    }
+    catch (const std::exception& ex) {
+      Console::showException(ex);
+    }
   }
 
   void onCursorColorType()

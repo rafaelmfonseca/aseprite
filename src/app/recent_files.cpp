@@ -21,9 +21,9 @@
 
 namespace {
 
-enum { kPinnedFiles, kRecentFiles, kPinnedPaths, kRecentPaths };
+enum { kPinnedFiles, kRecentFiles, kPinnedPaths, kRecentPaths, kFavoriteFolders };
 
-const char* kSectionName[] = { "PinnedFiles", "RecentFiles", "PinnedPaths", "RecentPaths" };
+const char* kSectionName[] = { "PinnedFiles", "RecentFiles", "PinnedPaths", "RecentPaths", "FavoritePaths" };
 
 // Special key used in recent sections (files/paths) to indicate that
 // the section was already converted at least one time.
@@ -86,6 +86,22 @@ void RecentFiles::removeRecentFolder(const std::string& dir)
 {
   std::string fn = normalizePath(dir);
   removeItem(m_paths[kRecentFolders], fn);
+
+  Changed();
+}
+
+void RecentFiles::addFavoriteFolder(const std::string& dir)
+{
+  std::string fn = normalizePath(dir);
+  addItem(m_paths[kFavoriteFolders], fn);
+
+  Changed();
+}
+
+void RecentFiles::removeFavoriteFolder(const std::string& dir)
+{
+  std::string fn = normalizePath(dir);
+  removeItem(m_paths[kFavoriteFolders], fn);
 
   Changed();
 }

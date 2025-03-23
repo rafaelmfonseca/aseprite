@@ -17,13 +17,14 @@
 namespace app {
 
 class RecentFiles {
-  enum { kPinnedFiles, kRecentFiles, kPinnedFolders, kRecentFolders, kCollections };
+  enum { kPinnedFiles, kRecentFiles, kPinnedFolders, kRecentFolders, kCollections, kFavoriteFolders };
 
 public:
   const base::paths& pinnedFiles() const { return m_paths[kPinnedFiles]; }
   const base::paths& recentFiles() const { return m_paths[kRecentFiles]; }
   const base::paths& pinnedFolders() const { return m_paths[kPinnedFolders]; }
   const base::paths& recentFolders() const { return m_paths[kRecentFolders]; }
+  const base::paths& favoriteFolders() const { return m_paths[kFavoriteFolders]; }
 
   RecentFiles(const int limit);
   ~RecentFiles();
@@ -31,6 +32,8 @@ public:
   void addRecentFile(const std::string& filename);
   void removeRecentFile(const std::string& filename);
   void removeRecentFolder(const std::string& dir);
+  void addFavoriteFolder(const std::string& dir);
+  void removeFavoriteFolder(const std::string& dir);
   void setLimit(const int newLimit);
   void clear();
 

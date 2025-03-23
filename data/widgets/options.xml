@@ -24,6 +24,8 @@
           <listitem text="@.section_extensions" value="section_extensions" />
           <listitem text="@.section_experimental" value="section_experimental" />
           <separator horizontal="true" style="separator_in_view" />
+          <listitem text="@.section_user_custom" value="section_user_custom" />
+          <separator horizontal="true" style="separator_in_view" />
           <listitem text="@general.reset" value="section_reset" />
         </listbox>
       </view>
@@ -607,6 +609,18 @@
           <check id="cache_compressed_tilesets"
                  text="@.cache_compressed_tilesets"
                  pref="tileset.cache_compressed_tilesets" />
+        </vbox>
+
+        <!-- User Custom -->
+        <vbox id="section_user_custom">
+          <view expansive="true" maxsize="true">
+            <listbox id="art_folders_list" />
+          </view>
+          <hbox>
+            <button id="delete_art_folder" text="@recover_files.delete" minwidth="60" />
+            <boxfiller />
+            <button id="add_art_folder" text="@keyboard_shortcuts.add" minwidth="60" />
+          </hbox>
         </vbox>
 
         <!-- Reset -->
