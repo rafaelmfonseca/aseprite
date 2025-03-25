@@ -12,6 +12,7 @@
 #include "app/ui/draggable_widget.h"
 #include "app/ui/skin/skin_theme.h"
 #include "app/ui_context.h"
+#include "app/favorite_folders.h"
 #include "base/fs.h"
 #include "ui/alert.h"
 #include "ui/graphics.h"
@@ -54,10 +55,12 @@ protected:
   {
     auto theme = SkinTheme::get(this);
     ui::Style* style = theme->styles.recentFile();
-    ui::Style* styleDetail = theme->styles.recentFileDetail();
 
     setTextQuiet(m_title);
-    gfx::Size sz = theme->calcSizeHint(this, styleDetail);
+    gfx::Size sz = theme->calcSizeHint(this, style);
+
+    if (!m_desc.empty())
+      sz.h *= 5;
 
     ev.setSizeHint(gfx::Size(0, sz.h));
   }
@@ -83,7 +86,7 @@ protected:
 
   void onClick() override
   {
-    static_cast<FavoriteListBox*>(parent())->onClick(m_title);
+    // static_cast<FavoriteListBox*>(parent())->onClick(m_title);
   }
 
 private:
@@ -97,69 +100,22 @@ private:
 FavoriteListBox::FavoriteListBox()
 {
   // App::instance()->favoriteFolders()->Changed.connect([this] { rebuildList(); });
-  onRebuildList();
+  reload();
 }
 
-void FavoriteListBox::updateRecentListFromUIItems()
-{
-  base::paths favoritePaths;
-  for (auto item : children()) {
-    /*
-    auto fi = static_cast<FavoriteItem*>(item);
-    if (fi->hasFlags(ui::HIDDEN))
-      continue;
-
-    favoritePaths.push_back(fi->fullpath());
-    */
-  }
-  onUpdateRecentListFromUIItems(favoritePaths);
-}
-
-void FavoriteListBox::onScrollRegion(ui::ScrollRegionEvent& ev)
-{
-  for (auto item : children()) {
-    // static_cast<FavoriteItem*>(item)->onScrollRegion(ev);
-  }
-}
-
-void FavoriteListBox::onRebuildList()
+void FavoriteListBox::reload()
 {
   while (auto child = lastChild()) {
     removeChild(child);
-    child->deferDelete();
   }
 
-  /*
   auto recent = App::instance()->favoriteFolders();
   for (const auto& fn : recent->favoriteFolders())
-    addChild(new RecentFileItem(fn, false));
-    */
- addChild(new FavoriteItem("a", "b", "c"));
+    addChild(new FavoriteItem(fn->label(), fn->path(), fn->path()));
 
   View* view = View::getView(this);
   if (view)
-    view->layout();
-  else
-    layout();
-}
-
-void FavoriteListBox::onClick(const std::string& path)
-{
-  if (!base::is_file(path)) {
-    ui::Alert::show(Strings::alerts_recent_file_doesnt_exist());
-    App::instance()->recentFiles()->removeRecentFile(path);
-    return;
-  }
-
-  Command* command = Commands::instance()->byId(CommandId::OpenFile());
-  Params params;
-  params.set("filename", path.c_str());
-  UIContext::instance()->executeCommandFromMenuOrShortcut(command, params);
-}
-
-void FavoriteListBox::onUpdateRecentListFromUIItems(const base::paths& favoritePaths)
-{
-  // App::instance()->favoriteFolders()->setFiles(pinnedPaths, recentPaths);
+    view->updateView();
 }
 
 } // namespace app

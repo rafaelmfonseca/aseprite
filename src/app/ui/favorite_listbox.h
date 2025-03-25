@@ -10,25 +10,13 @@ namespace app {
 
 class FavoriteItem;
 
-class FavoriteListBox : public ui::ListBox,
-                        public ui::ViewableWidget {
+class FavoriteListBox : public ui::ListBox {
   friend class FavoriteItem;
 
 public:
   FavoriteListBox();
 
-  void updateRecentListFromUIItems();
-
-protected:
-  // ui::ViewableWidget impl
-  virtual void onScrollRegion(ui::ScrollRegionEvent& ev);
-
-  virtual void onRebuildList() = 0;
-  virtual void onClick(const std::string& path) = 0;
-  virtual void onUpdateRecentListFromUIItems(const base::paths& favoritePaths) = 0;
-
-private:
-  void rebuildList();
+  void reload();
 };
 
 } // namespace app

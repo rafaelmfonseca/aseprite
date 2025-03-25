@@ -153,6 +153,7 @@ public:
     , m_loadLanguage(pref, m_extensions)
     , m_activeToolManager(&m_toolbox)
     , m_recent_files(pref.general.recentItems())
+    , m_favorite_folders()
 #ifdef ENABLE_DATA_RECOVERY
     , m_recovery(nullptr)
 #endif
@@ -691,6 +692,12 @@ RecentFiles* App::recentFiles() const
 {
   ASSERT(m_modules != nullptr);
   return &m_modules->m_recent_files;
+}
+
+FavoriteFolders* App::favoriteFolders() const
+{
+  ASSERT(m_modules != nullptr);
+  return &m_modules->m_favorite_folders;
 }
 
 Workspace* App::workspace() const
