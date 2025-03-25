@@ -110,8 +110,13 @@ void FavoriteListBox::reload()
   }
 
   auto recent = App::instance()->favoriteFolders();
-  for (const auto& fn : recent->favoriteFolders())
-    addChild(new FavoriteItem(fn->label(), fn->path(), fn->path()));
+  for (const auto& fn : recent->favoriteFolders()) {
+    addChild(new LinkLabel(fn->label()));
+    for (const auto& file : fn->listFiles()) {
+      addChild(new LinkLabel(file));
+      //addChild(new FavoriteItem(fn->label(), file, fn->label()));
+    }
+  }
 
   View* view = View::getView(this);
   if (view)

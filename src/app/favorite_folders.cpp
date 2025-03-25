@@ -30,6 +30,18 @@ FavoriteEntry::FavoriteEntry(const std::string& path,
 {
 }
 
+base::paths FavoriteEntry::listFiles()
+{
+  base::paths files;
+  for (const auto& file : base::list_files(m_path, base::ItemType::Files)) {
+    files.push_back(base::join_path(m_path, file));
+  }
+
+  return files;
+}
+
+//////////////////////////////////////////////////////////////////////
+// FavoriteFolders
 FavoriteFolders::FavoriteFolders()
 {
   load();
