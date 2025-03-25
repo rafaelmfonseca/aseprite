@@ -20,6 +20,7 @@
 #include "app/ui/data_recovery_view.h"
 #include "app/ui/main_window.h"
 #include "app/ui/recent_listbox.h"
+#include "app/ui/favorite_listbox.h"
 #include "app/ui/skin/skin_theme.h"
 #include "app/ui/status_bar.h"
 #include "app/ui/workspace.h"
@@ -56,6 +57,7 @@ using namespace app::skin;
 HomeView::HomeView()
   : m_files(new RecentFilesListBox)
   , m_folders(new RecentFoldersListBox)
+  , m_favorites(new FavoriteListBox)
 #ifdef ENABLE_NEWS
   , m_news(new NewsListBox)
 #endif
@@ -71,6 +73,7 @@ HomeView::HomeView()
 
   filesView()->attachToView(m_files);
   foldersView()->attachToView(m_folders);
+  favoritesView()->attachToView(m_favorites);
 #ifdef ENABLE_NEWS
   newsView()->attachToView(m_news);
 #endif

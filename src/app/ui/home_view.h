@@ -27,6 +27,7 @@ class DataRecoveryView;
 class NewsListBox;
 class RecentFilesListBox;
 class RecentFoldersListBox;
+class FavoriteListBox;
 
 namespace crash {
 class DataRecovery;
@@ -94,6 +95,7 @@ private:
 
   RecentFilesListBox* m_files;
   RecentFoldersListBox* m_folders;
+  FavoriteListBox* m_favorites;
   NewsListBox* m_news;
   crash::DataRecovery* m_dataRecovery;
   DataRecoveryView* m_dataRecoveryView;

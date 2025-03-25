@@ -48,6 +48,7 @@ class LoggerModule;
 class MainWindow;
 class Preferences;
 class RecentFiles;
+class FavoriteFolders;
 class Timeline;
 class Workspace;
 

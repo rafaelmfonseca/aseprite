@@ -551,6 +551,7 @@ target_sources(app-lib PRIVATE
   modules/palettes.cpp
   pref/preferences.cpp
   recent_files.cpp
+  favorite_folders.cpp
   render/shader_renderer.cpp
   render/simple_renderer.cpp
   res/palettes_loader_delegate.cpp
@@ -650,6 +651,7 @@ target_sources(app-lib PRIVATE
   ui/pref_widget.cpp
   ui/preview_editor.cpp
   ui/recent_listbox.cpp
+  ui/favorite_listbox.cpp
   ui/resources_listbox.cpp
   ui/rgbmap_algorithm_selector.cpp
   ui/sampling_selector.cpp

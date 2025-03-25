@@ -37,6 +37,7 @@
 #include "app/modules/palettes.h"
 #include "app/pref/preferences.h"
 #include "app/recent_files.h"
+#include "app/favorite_folders.h"
 #include "app/resource_finder.h"
 #include "app/send_crash.h"
 #include "app/site.h"
@@ -137,6 +138,7 @@ public:
   tools::ActiveToolManager m_activeToolManager;
   Commands m_commands;
   RecentFiles m_recent_files;
+  FavoriteFolders m_favorite_folders;
   InputChain m_inputChain;
   Clipboard m_clipboard;
 #ifdef ENABLE_DATA_RECOVERY
