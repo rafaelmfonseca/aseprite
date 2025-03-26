@@ -26,6 +26,8 @@
                 expansive="true" by="percetage" position="65"
                 style="workspace_splitter">
         <vbox id="favorites_placeholder">
+          <label text="@home_view.favorite_folders" style="workspace_label" />
+          <search id="search" magnet="true" height="31" />
           <view id="favorites_view" expansive="true" style="workspace_view"></view>
         </vbox>
         <splitter vertical="true" noborders="true" childspacing="2"

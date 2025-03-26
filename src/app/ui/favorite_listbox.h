@@ -17,8 +17,16 @@ class FavoriteListBox : public ui::ListBox {
 
 public:
   FavoriteListBox();
+  
+  void setFilter(const std::string& filter);
 
+protected:
+  void onClick(const std::string& path);
+
+private:
   void reload();
+
+  std::string m_filter;
 };
 
 } // namespace app

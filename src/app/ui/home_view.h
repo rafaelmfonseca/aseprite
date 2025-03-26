@@ -92,6 +92,7 @@ private:
   void onNewFile();
   void onOpenFile();
   void onRecoverSprites();
+  void onSearchChange();
 
   RecentFilesListBox* m_files;
   RecentFoldersListBox* m_folders;

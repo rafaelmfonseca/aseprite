@@ -20,6 +20,7 @@
 #include "ui/link_label.h"
 #include "ui/listitem.h"
 #include "ui/message.h"
+#include "ui/separator.h"
 #include "ui/paint_event.h"
 #include "ui/scroll_region_event.h"
 #include "ui/size_hint_event.h"
@@ -34,18 +35,10 @@ using namespace skin;
 //////////////////////////////////////////////////////////////////////
 // FavoriteItemSeparator
 
-class FavoriteItemSeparator : public SeparatorInView {
+class FavoriteItemSeparator : public Separator {
 public:
   FavoriteItemSeparator(const std::string& text)
-    : SeparatorInView(text, ui::HORIZONTAL)
-  {
-    InitTheme.connect([this] {
-      auto b = this->border();
-      b.top(2 * b.top());
-      b.bottom(2 * b.bottom());
-      this->setBorder(b);
-    });
-  }
+    : Separator(text, ui::HORIZONTAL) { }
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -104,7 +97,7 @@ protected:
 
   void onClick() override
   {
-    // static_cast<FavoriteListBox*>(parent())->onClick(m_title);
+    static_cast<FavoriteListBox*>(parent())->onClick(m_fullpath);
   }
 
 private:
@@ -125,6 +118,19 @@ FavoriteListBox::FavoriteListBox()
   reload();
 }
 
+void FavoriteListBox::onClick(const std::string& path)
+{
+  if (!base::is_file(path)) {
+    ui::Alert::show(Strings::alerts_favorite_file_doesnt_exist());
+    return;
+  }
+
+  Command* command = Commands::instance()->byId(CommandId::OpenFile());
+  Params params;
+  params.set("filename", path.c_str());
+  UIContext::instance()->executeCommandFromMenuOrShortcut(command, params);
+}
+
 void FavoriteListBox::reload()
 {
   while (auto child = lastChild()) {
@@ -135,13 +141,21 @@ void FavoriteListBox::reload()
   for (const auto& fn : recent->favoriteFolders()) {
     addChild(new FavoriteItemSeparator(fn->label()));
     for (const auto& file : fn->listFiles()) {
-      addChild(new FavoriteItem(file));
+      if (file.find(m_filter) != std::string::npos)
+        addChild(new FavoriteItem(file));
     }
   }
 
   View* view = View::getView(this);
   if (view)
     view->updateView();
+}
+
+void FavoriteListBox::setFilter(const std::string& filter)
+{
+  m_filter = filter;
+
+  reload();
 }
 
 } // namespace app

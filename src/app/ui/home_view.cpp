@@ -74,6 +74,7 @@ HomeView::HomeView()
   filesView()->attachToView(m_files);
   foldersView()->attachToView(m_folders);
   favoritesView()->attachToView(m_favorites);
+  search()->Change.connect([this] { onSearchChange(); });
 #ifdef ENABLE_NEWS
   newsView()->attachToView(m_news);
 #endif
@@ -361,6 +362,12 @@ void HomeView::onRecoverSprites()
 
   App::instance()->mainWindow()->getTabsBar()->selectTab(m_dataRecoveryView);
 #endif
+}
+
+void HomeView::onSearchChange()
+{
+  std::string searchText = search()->text();
+  m_favorites->setFilter(searchText);
 }
 
 } // namespace app
