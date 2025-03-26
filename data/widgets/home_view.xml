@@ -23,6 +23,7 @@
               expansive="true" by="percetage" position="50"
               style="workspace_splitter">
       <splitter vertical="true" noborders="true" childspacing="2"
+                expansive="true" by="percetage" position="65"
                 style="workspace_splitter">
         <vbox id="favorites_placeholder">
           <view id="favorites_view" expansive="true" style="workspace_view"></view>

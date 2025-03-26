@@ -9,9 +9,11 @@
 namespace app {
 
 class FavoriteItem;
+class FavoriteItemSeparator;
 
 class FavoriteListBox : public ui::ListBox {
   friend class FavoriteItem;
+  friend class FavoriteItemSeparator;
 
 public:
   FavoriteListBox();

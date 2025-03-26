@@ -10,6 +10,7 @@
 #include "app/i18n/strings.h"
 #include "app/pref/preferences.h"
 #include "app/ui/draggable_widget.h"
+#include "app/ui/separator_in_view.h"
 #include "app/ui/skin/skin_theme.h"
 #include "app/ui_context.h"
 #include "app/favorite_folders.h"
@@ -31,14 +32,32 @@ using namespace ui;
 using namespace skin;
 
 //////////////////////////////////////////////////////////////////////
+// FavoriteItemSeparator
+
+class FavoriteItemSeparator : public SeparatorInView {
+public:
+  FavoriteItemSeparator(const std::string& text)
+    : SeparatorInView(text, ui::HORIZONTAL)
+  {
+    InitTheme.connect([this] {
+      auto b = this->border();
+      b.top(2 * b.top());
+      b.bottom(2 * b.bottom());
+      this->setBorder(b);
+    });
+  }
+};
+
+//////////////////////////////////////////////////////////////////////
 // FavoriteItem
 
 class FavoriteItem : public LinkLabel {
 public:
-  FavoriteItem(const std::string& link, const std::string& title, const std::string& desc)
-    : LinkLabel(link, title)
-    , m_title(title)
-    , m_desc(desc)
+  FavoriteItem(const std::string& file)
+    : LinkLabel("", "")
+    , m_fullpath(file)
+    , m_name(base::get_file_name(file))
+    , m_path(base::get_file_path(file))
   {
     initTheme();
   }
@@ -55,14 +74,15 @@ protected:
   {
     auto theme = SkinTheme::get(this);
     ui::Style* style = theme->styles.recentFile();
+    ui::Style* styleDetail = theme->styles.recentFileDetail();
 
-    setTextQuiet(m_title);
-    gfx::Size sz = theme->calcSizeHint(this, style);
+    setTextQuiet(m_name);
+    gfx::Size sz1 = theme->calcSizeHint(this, style);
 
-    if (!m_desc.empty())
-      sz.h *= 5;
+    setTextQuiet(m_fullpath);
+    gfx::Size sz2 = theme->calcSizeHint(this, styleDetail);
 
-    ev.setSizeHint(gfx::Size(0, sz.h));
+    ev.setSizeHint(gfx::Size(sz1.w + sz2.w, std::max(sz1.h, sz2.h)));
   }
 
   void onPaint(PaintEvent& ev) override
@@ -73,14 +93,12 @@ protected:
     ui::Style* style = theme->styles.recentFile();
     ui::Style* styleDetail = theme->styles.recentFileDetail();
 
-    setTextQuiet(m_title);
+    setTextQuiet(m_name.c_str());
+    theme->paintWidget(g, this, style, bounds);
+
     gfx::Size textSize = theme->calcSizeHint(this, style);
-    gfx::Rect textBounds(bounds.x, bounds.y, bounds.w, textSize.h);
-    gfx::Rect detailsBounds(bounds.x, bounds.y + textSize.h, bounds.w, bounds.h - textSize.h);
-
-    theme->paintWidget(g, this, style, textBounds);
-
-    setTextQuiet(m_desc);
+    gfx::Rect detailsBounds(bounds.x + textSize.w, bounds.y, bounds.w - textSize.w, bounds.h);
+    setTextQuiet(m_path.c_str());
     theme->paintWidget(g, this, styleDetail, detailsBounds);
   }
 
@@ -90,6 +108,10 @@ protected:
   }
 
 private:
+  std::string m_fullpath;
+  std::string m_name;
+  std::string m_path;
+
   std::string m_title;
   std::string m_desc;
 };
@@ -111,10 +133,9 @@ void FavoriteListBox::reload()
 
   auto recent = App::instance()->favoriteFolders();
   for (const auto& fn : recent->favoriteFolders()) {
-    addChild(new LinkLabel(fn->label()));
+    addChild(new FavoriteItemSeparator(fn->label()));
     for (const auto& file : fn->listFiles()) {
-      addChild(new LinkLabel(file));
-      //addChild(new FavoriteItem(fn->label(), file, fn->label()));
+      addChild(new FavoriteItem(file));
     }
   }
 
