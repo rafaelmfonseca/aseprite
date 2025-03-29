@@ -394,8 +394,12 @@ void load_aseprite_data_file(const std::string& dataFilename,
                                  nullptr);
          xmlArtRef;
          xmlArtRef = xmlArtRef->NextSiblingElement()) {
+      const char* artRefId = xmlArtRef->Attribute("id");
+      if (!artRefId)
+        continue;
 
       auto artRef = new doc::ArtRef();
+      artRef->setId(artRefId);
 
       // Art ref text
       if (xmlArtRef->Attribute("text")) {

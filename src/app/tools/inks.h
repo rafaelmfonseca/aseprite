@@ -497,4 +497,10 @@ public:
   }
 };
 
+class ArtRefInk : public BaseInk {
+  Ink* clone() override { return new ArtRefInk(*this); }
+
+  bool isArtRef() const override { return true; }
+};
+
 }} // namespace app::tools

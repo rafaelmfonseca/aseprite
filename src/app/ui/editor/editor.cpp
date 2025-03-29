@@ -1931,6 +1931,22 @@ void Editor::cancelSelections()
   clearSlicesSelection();
 }
 
+void Editor::selectArtRef(const doc::ArtRef* artRef)
+{
+  ASSERT(slartRefice);
+  m_selectedArtRef = artRef->id();
+  invalidate();
+
+  if (isActive())
+    UIContext::instance()->notifyActiveSiteChanged();
+}
+
+bool Editor::isArtRefSelected(const doc::ArtRef* artRef) const
+{
+  ASSERT(artRef);
+  return (m_selectedArtRef == artRef->id());
+}
+
 void Editor::showUnhandledException(const std::exception& ex, const ui::Message* msg)
 {
   EditorState* state = getState().get();

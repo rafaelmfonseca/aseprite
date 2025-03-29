@@ -67,6 +67,9 @@ public:
   // Returns true if this ink is used to mark slices
   virtual bool isSlice() const { return false; }
 
+  // Returns true if this ink is used to mark slices
+  virtual bool isArtRef() const { return false; }
+
   // Returns true if this tool uses the dithering options
   virtual bool withDitheringOptions() const { return false; }
 
