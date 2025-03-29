@@ -589,6 +589,7 @@
       <key tool="move" shortcut="V" />
       <key tool="slice" shortcut="Shift+C" />
       <key tool="zoom" shortcut="Z" />
+      <key tool="art_ref" shortcut="7" />
 
       <key tool="paint_bucket" shortcut="G" />
       <key tool="gradient" shortcut="Shift+G" />
@@ -1500,6 +1501,14 @@
             intertwine="as_lines"
             tracepolicy="overlap"
             default_brush_size="16" />
+    </group>
+
+    <group id="art_ref">
+      <tool id="art_ref"
+            text="@.art_ref"
+            ink="art_ref"
+            controller="freehand"
+            pointshape="pixel" />
     </group>
 
   </tools>

@@ -10,6 +10,7 @@
 
 namespace doc {
 class Slice;
+class ArtRef;
 }
 
 namespace app {
@@ -22,21 +23,25 @@ public:
     None,
     SliceBounds,
     SliceCenter,
+    ArtRefBounds,
   };
 
-  EditorHit(Type type) : m_type(type), m_border(0), m_slice(nullptr) {}
+  EditorHit(Type type) : m_type(type), m_border(0), m_slice(nullptr), m_artRef(nullptr) {}
 
   Type type() const { return m_type; }
   int border() const { return m_border; }
   doc::Slice* slice() const { return m_slice; }
+  doc::ArtRef* artRef() const { return m_artRef; }
 
   void setBorder(int border) { m_border = border; }
   void setSlice(doc::Slice* slice) { m_slice = slice; }
+  void setArtRef(doc::ArtRef* artRef) { m_artRef = artRef; }
 
 private:
   Type m_type;
   int m_border;
   doc::Slice* m_slice;
+  doc::ArtRef* m_artRef;
 };
 
 } // namespace app

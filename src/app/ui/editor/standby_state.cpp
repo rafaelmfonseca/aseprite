@@ -249,6 +249,18 @@ bool StandbyState::onMouseDown(Editor* editor, MouseMessage* msg)
         return true;
     }
   }
+  else if (clickedInk->isArtRef()) {
+    EditorHit hit = editor->calcHit(msg->position());
+    switch (hit.type()) {
+      case EditorHit::ArtRefBounds:
+        if (msg->left()) {
+          // If we click outside all slices, we clear the selection of slices.
+          if (hit.artRef()) {
+            editor->selectArtRef(hit.artRef());
+          }
+        }
+    }
+  }
 
   // Only if the selected tool or quick tool is selection, we give the
   // possibility to transform/move the selection. In other case,

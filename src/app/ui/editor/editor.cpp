@@ -1123,7 +1123,11 @@ void Editor::drawArtRefs(ui::Graphics* g)
     out.offset(-bounds().origin());
 
     PaintWidgetPartInfo info;
-    theme->paintWidgetPart(g, theme->styles.artrefItemNormal(), out, info);
+    if (isArtRefSelected(artRef) && getCurrentEditorInk()->isArtRef()) {
+      info.styleFlags |= ui::Style::Layer::kSelected;
+    }
+
+    theme->paintWidgetPart(g, theme->styles.artRefItemNormal(), out, info);
   }
 }
 
@@ -2612,6 +2616,26 @@ EditorHit Editor::calcHit(const gfx::Point& mouseScreenPos)
               hit.setSlice(slice);
               return hit;
             }
+          }
+        }
+      }
+    }
+    else if (ink->isArtRef()) {
+      //if (m_docPref.show.artRefs()) {
+      if (true) {
+        gfx::Point mainOffset(mainTilePosition());
+
+        for (auto artRef : m_sprite->artRefs()) {
+          gfx::Rect bounds = artRef->bounds();
+          bounds.offset(mainOffset);
+          bounds = editorToScreen(bounds);
+
+          // Move bounds
+          if (bounds.contains(mouseScreenPos) &&
+              !bounds.shrink(5 * guiscale()).contains(mouseScreenPos)) {
+            EditorHit hit(EditorHit::ArtRefBounds);
+            hit.setArtRef(artRef);
+            return hit;
           }
         }
       }

@@ -543,6 +543,10 @@ bool StateWithWheelBehavior::onSetCursor(Editor* editor, const gfx::Point& mouse
       editor->showMouseCursor(kMoveCursor);
       return true;
     }
+    else if (ink->isArtRef()) {
+      editor->showMouseCursor(kCustomCursor, theme->cursors.artRef());
+      return true;
+    }
   }
 
   // Draw

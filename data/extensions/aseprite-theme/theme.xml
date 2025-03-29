@@ -140,6 +140,7 @@
 		<part id="cursor_rotate_nw" x="240" y="160" w="16" h="16" focusx="8" focusy="8" />
 		<part id="cursor_eyedropper" x="80" y="224" w="16" h="16" focusx="0" focusy="15" />
 		<part id="cursor_magnifier" x="80" y="240" w="16" h="16" focusx="5" focusy="5" />
+		<part id="cursor_art_ref" x="208" y="48" w="16" h="16" focusx="4" focusy="4" />
 		<part id="radio_normal" x="64" y="64" w="8" h="8" />
 		<part id="radio_selected" x="64" y="80" w="8" h="8" />
 		<part id="radio_disabled" x="64" y="64" w="8" h="8" />
@@ -209,7 +210,8 @@
 		<part id="buttonset_item_focused" x="128" y="16" w1="3" w2="10" w3="3" h1="3" h2="8" h3="5" />
 		<part id="buttonset_item_pushed" x="112" y="16" w1="3" w2="10" w3="3" h1="3" h2="8" h3="5" />
 		<part id="buttonset_item_active" x="112" y="32" w1="3" w2="10" w3="3" h1="3" h2="8" h3="5" />
-		<part id="artref_item_normal" x="128" y="32" w1="4" w2="8" w3="4" h1="4" h2="7" h3="5" />
+		<part id="art_ref_item_normal" x="128" y="32" w1="4" w2="8" w3="4" h1="4" h2="7" h3="5" />
+    <part id="art_ref_item_selected" x="128" y="48" w1="4" w2="8" w3="4" h1="4" h2="7" h3="5" />
 		<part id="tab_normal" x="2" y="112" w1="4" w2="5" w3="5" h1="4" h2="6" h3="2" />
 		<part id="tab_active" x="16" y="112" w1="4" w2="7" w3="5" h1="4" h2="6" h3="2" />
 		<part id="tab_bottom_active" x="16" y="124" w1="4" w2="7" w3="5" h1="2" h2="1" h3="2" />
@@ -416,6 +418,7 @@
 		<part id="tool_configuration" x="144" y="128" w="16" h="16" />
 		<part id="tool_minieditor" x="160" y="128" w="16" h="16" />
 		<part id="tool_timeline" x="176" y="128" w="16" h="16" />
+		<part id="tool_art_ref" x="192" y="48" w="16" h="16" />
 		<part id="simple_color_border" x="16" y="32" w1="3" w2="6" w3="3" h1="3" h2="6" h3="3" />
 		<part id="simple_color_selected" x="32" y="32" w1="3" w2="6" w3="3" h1="3" h2="6" h3="3" />
 		<part id="aseprite_face" x="0" y="272" w="28" h="30" />
@@ -1053,8 +1056,9 @@
 			<background-border part="buttonset_item_pushed" state="mouse capture" />
 			<background-border part="buttonset_item_focused" state="focus" />
 		</style>
-		<style id="artref_item_normal">
-			<background part="artref_item_normal" />
+		<style id="art_ref_item_normal">
+			<background part="art_ref_item_normal" />
+      <background part="art_ref_item_selected" state="selected" />
 		</style>
 		<style id="buttonset_item_icon" extends="buttonset_item">
 			<icon />

@@ -292,6 +292,10 @@ bool DrawingState::onSetCursor(Editor* editor, const gfx::Point& mouseScreenPos)
     auto theme = skin::SkinTheme::get(editor);
     editor->showMouseCursor(kCustomCursor, theme->cursors.eyedropper());
   }
+  else if (m_toolLoop->getInk()->isArtRef()) {
+    auto theme = skin::SkinTheme::get(editor);
+    editor->showMouseCursor(kCustomCursor, theme->cursors.artRef());
+  }
   else {
     editor->showBrushPreview(mouseScreenPos);
   }
