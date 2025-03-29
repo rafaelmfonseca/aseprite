@@ -67,6 +67,7 @@
 #include "os/system.h"
 #include "render/rasterize.h"
 #include "ui/ui.h"
+#include "doc/art_ref.h"
 
 #include <algorithm>
 #include <cmath>
@@ -804,6 +805,12 @@ void Editor::drawOneSpriteUnclippedRect(ui::Graphics* g,
       }
       m_docPref.show.pixelGrid.forceDirtyFlag();
 
+      // Draw the art refs
+      //if (m_docPref.show.artRefs()) {
+      if (true) {
+        drawArtRefs(g);
+      }
+
       // Draw the grid
       if (m_docPref.show.grid()) {
         gfx::Rect gridrc;
@@ -1099,6 +1106,25 @@ void Editor::drawGrid(Graphics* g,
 
   for (double c = x1; c <= x2; c += gridF.w)
     g->drawVLine(grid_color, c, y1, spriteBounds.h);
+}
+
+void Editor::drawArtRefs(ui::Graphics* g)
+{
+  if (!isVisible() || !m_document)
+    return;
+
+  auto theme = SkinTheme::get(this);
+  gfx::Point mainOffset(mainTilePosition());
+
+  for (auto artRef : m_sprite->artRefs()) {
+    gfx::Rect out = artRef->bounds();
+    out.offset(mainOffset);
+    out = editorToScreen(out);
+    out.offset(-bounds().origin());
+
+    PaintWidgetPartInfo info;
+    theme->paintWidgetPart(g, theme->styles.artrefItemNormal(), out, info);
+  }
 }
 
 void Editor::drawSlices(ui::Graphics* g)

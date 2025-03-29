@@ -612,6 +612,7 @@
       <option id="slices" type="bool" default="true" />
       <option id="auto_guides" type="bool" default="true" />
       <option id="tile_numbers" type="bool" default="true" />
+      <option id="art_refs" type="bool" default="true" />
     </section>
   </document>
 

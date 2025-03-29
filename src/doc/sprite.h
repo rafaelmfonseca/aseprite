@@ -28,6 +28,7 @@
 #include "doc/tile.h"
 #include "doc/with_user_data.h"
 #include "gfx/rect.h"
+#include "doc/art_refs.h"
 
 #include <memory>
 #include <string>
@@ -191,6 +192,9 @@ public:
   const Slices& slices() const { return m_slices; }
   Slices& slices() { return m_slices; }
 
+  const ArtRefs& artRefs() const { return m_artRefs; }
+  ArtRefs& artRefs() { return m_artRefs; }
+
   ////////////////////////////////////////
   // Shared Images and CelData (for linked Cels)
 
@@ -259,6 +263,7 @@ private:
 
   Tags m_tags;
   Slices m_slices;
+  ArtRefs m_artRefs;
 
   // Tilesets
   mutable Tilesets* m_tilesets;

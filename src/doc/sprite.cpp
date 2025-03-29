@@ -69,6 +69,7 @@ Sprite::Sprite(const ImageSpec& spec, int ncolors)
   , m_gridBounds(Sprite::DefaultGridBounds())
   , m_tags(this)
   , m_slices(this)
+  , m_artRefs(this)
   , m_tilesets(nullptr)
 {
   // Generate palette

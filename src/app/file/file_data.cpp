@@ -20,6 +20,8 @@
 #include "doc/slice.h"
 #include "fmt/format.h"
 #include "gfx/color.h"
+#include "ui/alert.h"
+#include "doc/art_ref.h"
 
 #include "tinyxml2.h"
 
@@ -237,6 +239,7 @@ void update_xml_slice(const doc::Slice* slice, XMLElement* xmlSlice)
 
 } // anonymous namespace
 
+// add art refs here
 void load_aseprite_data_file(const std::string& dataFilename,
                              doc::Document* doc,
                              app::Color& defaultSliceColor)
@@ -378,6 +381,43 @@ void load_aseprite_data_file(const std::string& dataFilename,
       }
 
       doc->sprite()->slices().add(slice);
+    }
+  }
+
+  XMLElement* xmlArtRefs =
+    handle.FirstChildElement("sprite").FirstChildElement("artrefs").ToElement();
+
+  // Load artrefs from <artrefs> elements
+  if (xmlArtRefs) {
+    for (XMLElement* xmlArtRef = (xmlArtRefs->FirstChildElement("artref") ? 
+                                 xmlArtRefs->FirstChildElement("artref")->ToElement() :
+                                 nullptr);
+         xmlArtRef;
+         xmlArtRef = xmlArtRef->NextSiblingElement()) {
+
+      auto artRef = new doc::ArtRef();
+
+      // Art ref text
+      if (xmlArtRef->Attribute("text")) {
+        artRef->setText(xmlArtRef->Attribute("text"));
+      }
+
+      for (XMLElement* xmlPos =
+             (xmlArtRef->FirstChildElement("pos") ? xmlArtRef->FirstChildElement("pos")->ToElement() :
+                                                 nullptr);
+           xmlPos;
+           xmlPos = xmlPos->NextSiblingElement()) {
+
+        int x = std::strtol(xmlPos->Attribute("x"), nullptr, 10);
+        int y = std::strtol(xmlPos->Attribute("y"), nullptr, 10);
+        int w = std::strtol(xmlPos->Attribute("w"), nullptr, 10);
+        int h = std::strtol(xmlPos->Attribute("h"), nullptr, 10);
+
+        artRef->setBounds(gfx::Rect(x, y, w, h));
+      }
+
+      //ui::Alert::show(artRef->text());
+      doc->sprite()->artRefs().add(artRef);
     }
   }
 }
