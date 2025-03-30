@@ -1937,7 +1937,7 @@ void Editor::cancelSelections()
 
 void Editor::selectArtRef(const doc::ArtRef* artRef)
 {
-  ASSERT(slartRefice);
+  ASSERT(artRef);
   m_selectedArtRef = artRef->id();
   invalidate();
 

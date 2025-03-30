@@ -255,11 +255,13 @@ bool StandbyState::onMouseDown(Editor* editor, MouseMessage* msg)
     switch (hit.type()) {
       case EditorHit::ArtRefBounds:
         if (msg->left()) {
-          if (hit.artRef()) {
-            editor->selectArtRef(hit.artRef());
+          // TODO: Check this later
+          doc::ArtRef* artRef = hit.artRef();
+          if (artRef) {
+            editor->selectArtRef(artRef);
           }
 
-          MovingArtRefState* newState = new MovingArtRefState(editor, msg, hit);
+          MovingArtRefState* newState = new MovingArtRefState(editor, msg, hit, artRef);
           editor->setState(EditorStatePtr(newState));
         }
         return true;

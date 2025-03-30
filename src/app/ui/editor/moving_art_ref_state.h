@@ -13,10 +13,19 @@ class MovingArtRefState : public StandbyState {
 public:
   MovingArtRefState(Editor* editor,
                     ui::MouseMessage* msg,
-                    const EditorHit& hit);
+                    const EditorHit& hit,
+                    // TODO: Check this later
+                    doc::ArtRef* artRef);
 
   bool onMouseUp(Editor* editor, ui::MouseMessage* msg) override;
+  bool onMouseMove(Editor* editor, ui::MouseMessage* msg) override;
+
   bool onSetCursor(Editor* editor, const gfx::Point& mouseScreenPos) override;
+
+private:
+  // TODO: Check this later
+  gfx::Point m_mouseStart;
+  doc::ArtRef* m_selected;
 };
 
 } // namespace app

@@ -17,8 +17,13 @@ using namespace ui;
 
 MovingArtRefState::MovingArtRefState(Editor* editor,
                                      ui::MouseMessage* msg,
-                                     const EditorHit& hit)
+                                     const EditorHit& hit,
+                                     // TODO: Check this later
+                                     doc::ArtRef* artRef)
+  : m_selected(artRef)
 {
+  m_mouseStart = editor->screenToEditor(msg->position());
+  editor->captureMouse();
 }
 
 bool MovingArtRefState::onMouseUp(Editor* editor, MouseMessage* msg)
@@ -28,9 +33,27 @@ bool MovingArtRefState::onMouseUp(Editor* editor, MouseMessage* msg)
   return true;
 }
 
+bool MovingArtRefState::onMouseMove(Editor* editor, MouseMessage* msg)
+{
+  gfx::Point newCursorPos = editor->screenToEditor(msg->position());
+  gfx::Point delta = newCursorPos - m_mouseStart;
+  gfx::Rect bounds = m_selected->bounds();
+
+  bounds.x += delta.x;
+  bounds.y += delta.y;
+
+  m_selected->setBounds(bounds);
+
+  // Redraw the editor.
+  editor->invalidate();
+
+  // Use StandbyState implementation
+  return StandbyState::onMouseMove(editor, msg);
+}
+
 bool MovingArtRefState::onSetCursor(Editor* editor, const gfx::Point& mouseScreenPos)
 {
-  editor->showMouseCursor(kSizeNWCursor);
+  editor->showMouseCursor(kArrowCursor);
   return true;
 }
 
