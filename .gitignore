@@ -12,7 +12,8 @@
 *.res
 .DS_Store
 .vs
-.vscode
+#.vscode
+.vscode/settings.json
 tests/_test*
 build
 .build
