@@ -609,6 +609,7 @@ target_sources(app-lib PRIVATE
   ui/editor/editor_render.cpp
   ui/editor/editor_states_history.cpp
   ui/editor/editor_view.cpp
+  ui/editor/moving_art_ref_state.cpp
   ui/editor/moving_cel_state.cpp
   ui/editor/moving_pixels_state.cpp
   ui/editor/moving_selection_state.cpp

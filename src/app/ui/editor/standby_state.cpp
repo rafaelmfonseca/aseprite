@@ -33,6 +33,7 @@
 #include "app/ui/editor/editor_customization_delegate.h"
 #include "app/ui/editor/glue.h"
 #include "app/ui/editor/handle_type.h"
+#include "app/ui/editor/moving_art_ref_state.h"
 #include "app/ui/editor/moving_cel_state.h"
 #include "app/ui/editor/moving_pixels_state.h"
 #include "app/ui/editor/moving_selection_state.h"
@@ -254,11 +255,14 @@ bool StandbyState::onMouseDown(Editor* editor, MouseMessage* msg)
     switch (hit.type()) {
       case EditorHit::ArtRefBounds:
         if (msg->left()) {
-          // If we click outside all slices, we clear the selection of slices.
           if (hit.artRef()) {
             editor->selectArtRef(hit.artRef());
           }
+
+          MovingArtRefState* newState = new MovingArtRefState(editor, msg, hit);
+          editor->setState(EditorStatePtr(newState));
         }
+        return true;
     }
   }
 
@@ -450,6 +454,17 @@ bool StandbyState::onSetCursor(Editor* editor, const gfx::Point& mouseScreenPos)
             case BOTTOM:          editor->showMouseCursor(kSizeSCursor); break;
             case BOTTOM | RIGHT:  editor->showMouseCursor(kSizeSECursor); break;
           }
+          return true;
+      }
+    }
+    else if (ink->isArtRef()) {
+      EditorHit hit = editor->calcHit(mouseScreenPos);
+      switch (hit.type()) {
+        case EditorHit::None:
+          // Do nothing, continue
+          break;
+        case EditorHit::ArtRefBounds:
+          editor->showMouseCursor(kArrowCursor);
           return true;
       }
     }

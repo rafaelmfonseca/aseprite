@@ -2630,10 +2630,10 @@ EditorHit Editor::calcHit(const gfx::Point& mouseScreenPos)
           bounds.offset(mainOffset);
           bounds = editorToScreen(bounds);
 
-          // Move bounds
-          if (bounds.contains(mouseScreenPos) &&
-              !bounds.shrink(5 * guiscale()).contains(mouseScreenPos)) {
+          // Move art reference
+          if (bounds.contains(mouseScreenPos)) {
             EditorHit hit(EditorHit::ArtRefBounds);
+            hit.setBorder(CENTER | MIDDLE);
             hit.setArtRef(artRef);
             return hit;
           }
