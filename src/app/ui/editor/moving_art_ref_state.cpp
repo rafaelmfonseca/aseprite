@@ -18,11 +18,23 @@ using namespace ui;
 MovingArtRefState::MovingArtRefState(Editor* editor,
                                      ui::MouseMessage* msg,
                                      const EditorHit& hit,
-                                     // TODO: Check this later
-                                     doc::ArtRef* artRef)
-  : m_selected(artRef)
+                                     const doc::SelectedObjects& selectedArtRefs)
+  : m_hit(hit)
+  , m_items(std::max<std::size_t>(1, selectedArtRefs.size()))
 {
   m_mouseStart = editor->screenToEditor(msg->position());
+
+  if (selectedArtRefs.empty()) {
+    m_items[0] = getItemForArtRef(m_hit.artRef());
+  }
+  else {
+    int i = 0;
+    for (ArtRef* artRef : selectedArtRefs.iterateAs<ArtRef>()) {
+      ASSERT(artRef);
+      m_items[i++] = getItemForArtRef(artRef);
+    }
+  }
+
   editor->captureMouse();
 }
 
@@ -37,12 +49,23 @@ bool MovingArtRefState::onMouseMove(Editor* editor, MouseMessage* msg)
 {
   gfx::Point newCursorPos = editor->screenToEditor(msg->position());
   gfx::Point delta = newCursorPos - m_mouseStart;
-  gfx::Rect bounds = m_selected->bounds();
+  gfx::Rect totalBounds = selectedArtRefsBounds();
 
-  bounds.x += delta.x;
-  bounds.y += delta.y;
+  ASSERT(totalBounds.w > 0);
+  ASSERT(totalBounds.h > 0);
 
-  m_selected->setBounds(bounds);
+  for (auto& item : m_items) {
+    gfx::Rect rc = item.artRef->bounds();
+
+    // Move art ref
+    if (m_hit.border() == (CENTER | MIDDLE)) {
+      rc.x += delta.x;
+      rc.y += delta.y;
+    }
+
+    if (m_hit.type() == EditorHit::ArtRefBounds)
+      item.artRef->setBounds(rc);
+  }
 
   // Redraw the editor.
   editor->invalidate();
@@ -55,6 +78,21 @@ bool MovingArtRefState::onSetCursor(Editor* editor, const gfx::Point& mouseScree
 {
   editor->showMouseCursor(kArrowCursor);
   return true;
+}
+
+MovingArtRefState::Item MovingArtRefState::getItemForArtRef(doc::ArtRef* artRef)
+{
+  Item item;
+  item.artRef = artRef;
+  return item;
+}
+
+gfx::Rect MovingArtRefState::selectedArtRefsBounds() const
+{
+  gfx::Rect bounds;
+  for (auto& item : m_items)
+    bounds |= item.artRef->bounds();
+  return bounds;
 }
 
 } // namespace app

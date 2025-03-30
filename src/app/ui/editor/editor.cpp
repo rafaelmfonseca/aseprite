@@ -784,6 +784,12 @@ void Editor::drawOneSpriteUnclippedRect(ui::Graphics* g,
 
     IntersectClip clip(g, dest);
     if (clip) {
+      // Draw the art refs
+      //if (m_docPref.show.artRefs()) {
+      if (true) {
+        drawArtRefs(g);
+      }
+      
       // Draw slices
       if (m_docPref.show.slices() && dx == m_proj.applyX(mainTilePosition().x) &&
           dy == m_proj.applyY(mainTilePosition().y))
@@ -804,12 +810,6 @@ void Editor::drawOneSpriteUnclippedRect(ui::Graphics* g,
         m_docPref.pixelGrid.forceSection();
       }
       m_docPref.show.pixelGrid.forceDirtyFlag();
-
-      // Draw the art refs
-      //if (m_docPref.show.artRefs()) {
-      if (true) {
-        drawArtRefs(g);
-      }
 
       // Draw the grid
       if (m_docPref.show.grid()) {
@@ -1110,6 +1110,9 @@ void Editor::drawGrid(Graphics* g,
 
 void Editor::drawArtRefs(ui::Graphics* g)
 {
+  // if ((m_flags & kShowSlices) == 0)
+  //   return;
+
   if (!isVisible() || !m_document)
     return;
 
@@ -1935,20 +1938,31 @@ void Editor::cancelSelections()
   clearSlicesSelection();
 }
 
+bool Editor::isArtRefSelected(const doc::ArtRef* artRef) const
+{
+  ASSERT(artRef);
+  return (m_selectedArtRef.contains(artRef->id()));
+}
+
+void Editor::clearArtRefsSelection()
+{
+  if (!m_selectedArtRef.empty()) {
+    m_selectedArtRef.clear();
+    invalidate();
+
+    if (isActive())
+      UIContext::instance()->notifyActiveSiteChanged();
+  }
+}
+
 void Editor::selectArtRef(const doc::ArtRef* artRef)
 {
   ASSERT(artRef);
-  m_selectedArtRef = artRef->id();
+  m_selectedArtRef.insert(artRef->id());
   invalidate();
 
   if (isActive())
     UIContext::instance()->notifyActiveSiteChanged();
-}
-
-bool Editor::isArtRefSelected(const doc::ArtRef* artRef) const
-{
-  ASSERT(artRef);
-  return (m_selectedArtRef == artRef->id());
 }
 
 void Editor::showUnhandledException(const std::exception& ex, const ui::Message* msg)

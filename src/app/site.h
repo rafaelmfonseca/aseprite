@@ -91,6 +91,10 @@ public:
   doc::SelectedObjects& selectedSlices() { return m_selectedSlices; }
   void selectedSlices(const doc::SelectedObjects& set) { m_selectedSlices = set; }
 
+  const doc::SelectedObjects& selectedArtRefs() const { return m_selectedArtRefs; }
+  doc::SelectedObjects& selectedArtRefs() { return m_selectedArtRefs; }
+  void selectedArtRefs(const doc::SelectedObjects& set) { m_selectedArtRefs = set; }
+
   doc::Palette* palette();
   doc::Image* image(int* x = nullptr, int* y = nullptr, int* opacity = nullptr) const;
   doc::Palette* palette() const;
@@ -117,6 +121,7 @@ private:
   doc::PalettePicks m_selectedColors;
   doc::PalettePicks m_selectedTiles;
   doc::SelectedObjects m_selectedSlices;
+  doc::SelectedObjects m_selectedArtRefs;
   TilemapMode m_tilemapMode;
   TilesetMode m_tilesetMode;
 };

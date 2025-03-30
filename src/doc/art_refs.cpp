@@ -29,4 +29,32 @@ void ArtRefs::add(ArtRef* artRef)
   artRef->setOwner(this);
 }
 
+void ArtRefs::remove(ArtRef* artRef)
+{
+  auto it = std::find(m_artRefs.begin(), m_artRefs.end(), artRef);
+  ASSERT(it != m_artRefs.end());
+  if (it != m_artRefs.end())
+    m_artRefs.erase(it);
+
+  artRef->setOwner(nullptr);
+}
+
+ArtRef* ArtRefs::getByName(const std::string& name) const
+{
+  for (ArtRef* artRef : *this) {
+    if (artRef->name() == name)
+      return artRef;
+  }
+  return nullptr;
+}
+
+ArtRef* ArtRefs::getById(ObjectId id) const
+{
+  for (ArtRef* artRef : *this) {
+    if (artRef->id() == id)
+      return artRef;
+  }
+  return nullptr;
+}
+
 } // namespace doc

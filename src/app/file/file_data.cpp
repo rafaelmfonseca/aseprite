@@ -390,16 +390,20 @@ void load_aseprite_data_file(const std::string& dataFilename,
   // Load artrefs from <artrefs> elements
   if (xmlArtRefs) {
     for (XMLElement* xmlArtRef = (xmlArtRefs->FirstChildElement("artref") ? 
-                                 xmlArtRefs->FirstChildElement("artref")->ToElement() :
-                                 nullptr);
+                                    xmlArtRefs->FirstChildElement("artref")->ToElement() :
+                                    nullptr);
          xmlArtRef;
          xmlArtRef = xmlArtRef->NextSiblingElement()) {
       const char* artRefId = xmlArtRef->Attribute("id");
       if (!artRefId)
         continue;
 
+      // If the document already contains a art ref with this name, use the one from the document
+      if (doc->sprite()->artRefs().getByName(artRefId))
+        continue;
+
       auto artRef = new doc::ArtRef();
-      artRef->setId(artRefId);
+      artRef->setName(artRefId);
 
       // Art ref text
       if (xmlArtRef->Attribute("text")) {
@@ -411,16 +415,14 @@ void load_aseprite_data_file(const std::string& dataFilename,
                                                  nullptr);
            xmlPos;
            xmlPos = xmlPos->NextSiblingElement()) {
-
         int x = std::strtol(xmlPos->Attribute("x"), nullptr, 10);
         int y = std::strtol(xmlPos->Attribute("y"), nullptr, 10);
         int w = std::strtol(xmlPos->Attribute("w"), nullptr, 10);
         int h = std::strtol(xmlPos->Attribute("h"), nullptr, 10);
-
+        
         artRef->setBounds(gfx::Rect(x, y, w, h));
       }
 
-      //ui::Alert::show(artRef->text());
       doc->sprite()->artRefs().add(artRef);
     }
   }

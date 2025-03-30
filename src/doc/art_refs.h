@@ -3,6 +3,7 @@
 #pragma once
 
 #include "base/disable_copying.h"
+#include "doc/object_id.h"
 
 #include <string>
 #include <vector>
@@ -22,7 +23,13 @@ public:
   ArtRefs(Sprite* sprite);
   ~ArtRefs();
 
+  Sprite* sprite() { return m_sprite; }
+
   void add(ArtRef* artRef);
+  void remove(ArtRef* artRef);
+
+  ArtRef* getByName(const std::string& name) const;
+  ArtRef* getById(const ObjectId id) const;
 
   iterator begin() { return m_artRefs.begin(); }
   iterator end() { return m_artRefs.end(); }

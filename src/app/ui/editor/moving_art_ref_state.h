@@ -4,6 +4,7 @@
 
 #include "app/ui/editor/editor_hit.h"
 #include "app/ui/editor/standby_state.h"
+#include "doc/selected_objects.h"
 #include "doc/art_ref.h"
 
 namespace app {
@@ -14,20 +15,25 @@ public:
   MovingArtRefState(Editor* editor,
                     ui::MouseMessage* msg,
                     const EditorHit& hit,
-                    // TODO: Check this later
-                    doc::ArtRef* artRef);
+                    const doc::SelectedObjects& selectedArtRefs);
 
   bool onMouseUp(Editor* editor, ui::MouseMessage* msg) override;
   bool onMouseMove(Editor* editor, ui::MouseMessage* msg) override;
-
   bool onSetCursor(Editor* editor, const gfx::Point& mouseScreenPos) override;
 
 private:
-  // TODO: Check this later
+  struct Item {
+    doc::ArtRef* artRef;
+  };
+
+  Item getItemForArtRef(doc::ArtRef* artRef);
+  gfx::Rect selectedArtRefsBounds() const;
+
+  EditorHit m_hit;
   gfx::Point m_mouseStart;
-  doc::ArtRef* m_selected;
+  std::vector<Item> m_items;
 };
 
 } // namespace app
 
-#endif // APP_UI_EDITOR_MOVING_ART_REF_STATE_H_INCLUDED
+#endif

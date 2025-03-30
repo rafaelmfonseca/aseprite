@@ -305,8 +305,9 @@ public:
   bool hasSelectedSlices() const { return !m_selectedSlices.empty(); }
 
   // Functions to handle the set of selected art references.
-  void selectArtRef(const doc::ArtRef* artRef);
   bool isArtRefSelected(const doc::ArtRef* artRef) const;
+  void clearArtRefsSelection();
+  void selectArtRef(const doc::ArtRef* artRef);
 
   // Called by DocView's InputChainElement::onCancel() impl when Esc
   // key is pressed to cancel the active selection.
@@ -497,7 +498,7 @@ private:
   doc::SelectedObjects m_selectedSlices;
 
   // For art refs
-  std::string m_selectedArtRef;
+  doc::SelectedObjects m_selectedArtRef;
 
   // Active sprite editor with the keyboard focus.
   static Editor* m_activeEditor;

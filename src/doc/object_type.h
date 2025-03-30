@@ -35,6 +35,10 @@ enum class ObjectType {
   LayerTilemap = 14,
   Tileset = 15,
   Tilesets = 16,
+
+  // Really far away value to not conflict
+  // with newer functionalities
+  ArtRef = 700
 };
 
 } // namespace doc

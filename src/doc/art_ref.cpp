@@ -10,6 +10,7 @@
 namespace doc {
 
 ArtRef::ArtRef()
+  : Object(ObjectType::ArtRef)
 {
 }
 
@@ -21,6 +22,21 @@ ArtRef::~ArtRef()
 void ArtRef::setOwner(ArtRefs* owner)
 {
   m_owner = owner;
+}
+
+void ArtRef::setName(const std::string& name)
+{
+  m_name = name;
+}
+
+void ArtRef::setText(const std::string& text)
+{
+  m_text = text;
+}
+
+void ArtRef::setBounds(const gfx::Rect& bounds)
+{
+  m_bounds = bounds;
 }
 
 } // namespace doc

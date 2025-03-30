@@ -501,6 +501,7 @@ class ArtRefInk : public BaseInk {
   Ink* clone() override { return new ArtRefInk(*this); }
 
   bool isArtRef() const override { return true; }
+
   void prepareInk(ToolLoop* loop) override {}
   void inkHline(int x1, int y, int x2, ToolLoop* loop) override {}
 };

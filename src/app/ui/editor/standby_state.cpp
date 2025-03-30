@@ -255,13 +255,17 @@ bool StandbyState::onMouseDown(Editor* editor, MouseMessage* msg)
     switch (hit.type()) {
       case EditorHit::ArtRefBounds:
         if (msg->left()) {
-          // TODO: Check this later
-          doc::ArtRef* artRef = hit.artRef();
-          if (artRef) {
-            editor->selectArtRef(artRef);
+          // If we click outside all slices, we clear the selection of slices.
+          if (!hit.artRef() || !site.selectedArtRefs().contains(hit.artRef()->id())) {
+            editor->clearArtRefsSelection();
+            editor->selectArtRef(hit.artRef());
+
+            site = Site();
+            editor->getSite(&site);
           }
 
-          MovingArtRefState* newState = new MovingArtRefState(editor, msg, hit, artRef);
+          MovingArtRefState* newState =
+            new MovingArtRefState(editor, msg, hit, site.selectedArtRefs());
           editor->setState(EditorStatePtr(newState));
         }
         return true;
