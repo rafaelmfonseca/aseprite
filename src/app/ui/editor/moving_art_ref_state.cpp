@@ -55,7 +55,7 @@ bool MovingArtRefState::onMouseMove(Editor* editor, MouseMessage* msg)
   ASSERT(totalBounds.h > 0);
 
   for (auto& item : m_items) {
-    gfx::Rect rc = item.artRef->bounds();
+    gfx::Rect rc = item.oldBounds;
 
     // Move art ref
     if (m_hit.border() == (CENTER | MIDDLE)) {
@@ -82,8 +82,12 @@ bool MovingArtRefState::onSetCursor(Editor* editor, const gfx::Point& mouseScree
 
 MovingArtRefState::Item MovingArtRefState::getItemForArtRef(doc::ArtRef* artRef)
 {
+  gfx::RectF bounds = artRef->bounds();
+
   Item item;
   item.artRef = artRef;
+  item.oldBounds = gfx::RectF(bounds.x, bounds.y, bounds.w, bounds.h);
+
   return item;
 }
 

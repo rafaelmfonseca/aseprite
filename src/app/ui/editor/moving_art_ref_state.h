@@ -24,6 +24,7 @@ public:
 private:
   struct Item {
     doc::ArtRef* artRef;
+    gfx::Rect oldBounds;
   };
 
   Item getItemForArtRef(doc::ArtRef* artRef);
