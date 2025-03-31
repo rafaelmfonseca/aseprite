@@ -219,6 +219,24 @@ protected:
   }
 };
 
+class ShowArtRefsCommand : public Command {
+  public:
+  ShowArtRefsCommand() : Command(CommandId::ShowArtRefs(), CmdUIOnlyFlag) {}
+  
+  protected:
+    bool onChecked(Context* ctx) override
+    {
+      DocumentPreferences& docPref = Preferences::instance().document(ctx->activeDocument());
+      return docPref.show.artRefs();
+    }
+  
+    void onExecute(Context* ctx) override
+    {
+      DocumentPreferences& docPref = Preferences::instance().document(ctx->activeDocument());
+      docPref.show.artRefs(!docPref.show.artRefs());
+    }
+  };
+
 Command* CommandFactory::createShowExtrasCommand()
 {
   return new ShowExtrasCommand;
@@ -267,6 +285,11 @@ Command* CommandFactory::createShowSlicesCommand()
 Command* CommandFactory::createShowTileNumbersCommand()
 {
   return new ShowTileNumbersCommand;
+}
+
+Command* CommandFactory::createShowArtRefsCommand()
+{
+  return new ShowArtRefsCommand;
 }
 
 } // namespace app

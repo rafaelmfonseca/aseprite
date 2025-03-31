@@ -785,8 +785,7 @@ void Editor::drawOneSpriteUnclippedRect(ui::Graphics* g,
     IntersectClip clip(g, dest);
     if (clip) {
       // Draw the art refs
-      //if (m_docPref.show.artRefs()) {
-      if (true) {
+      if (m_docPref.show.artRefs()) {
         drawArtRefs(g);
       }
       
@@ -1110,9 +1109,6 @@ void Editor::drawGrid(Graphics* g,
 
 void Editor::drawArtRefs(ui::Graphics* g)
 {
-  // if ((m_flags & kShowSlices) == 0)
-  //   return;
-
   if (!isVisible() || !m_document)
     return;
 
@@ -2635,8 +2631,7 @@ EditorHit Editor::calcHit(const gfx::Point& mouseScreenPos)
       }
     }
     else if (ink->isArtRef()) {
-      //if (m_docPref.show.artRefs()) {
-      if (true) {
+      if (m_docPref.show.artRefs()) {
         gfx::Point mainOffset(mainTilePosition());
 
         for (auto artRef : m_sprite->artRefs()) {

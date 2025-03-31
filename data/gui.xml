@@ -147,6 +147,7 @@
       <key command="FullscreenMode" shortcut="F11" mac="Cmd+Ctrl+F" />
       <key command="ShowGrid" shortcut="Ctrl+'" mac="Cmd+'" />
       <key command="ShowPixelGrid" shortcut="Ctrl+Shift+'" mac="Cmd+Shift+'" />
+      <key command="ShowArtRefs" shortcut="Shift+'" mac="Shift+'" />
       <key command="SnapToGrid" shortcut="Shift+S" />
       <key command="SetLoopSection" shortcut="F2" context="FramesSelection" />
       <key command="ShowOnionSkin" shortcut="F3" />
@@ -1006,6 +1007,7 @@
           <item command="ShowSlices" text="@.view_show_slices" />
           <item command="ShowPixelGrid" text="@.view_show_pixel_grid" />
           <item command="ShowTileNumbers" text="@.view_show_tile_numbers" />
+          <item command="ShowArtRefs" text="@.view_show_art_refs" />
           <separator />
           <item command="ShowBrushPreview" text="@.view_show_brush_preview" />
         </menu>
