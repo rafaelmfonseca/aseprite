@@ -423,6 +423,8 @@ void Editor::getSite(Site* site) const
     site->selectedSlices(m_selectedSlices);
   }
 
+  // TODO rafaelmfonseca: add art refs here
+
   // TODO we should not access timeline directly here
   Timeline* timeline = App::instance()->timeline();
   if (timeline && timeline->isVisible() && timeline->range().enabled()) {

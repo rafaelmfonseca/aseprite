@@ -54,8 +54,11 @@ bool MovingArtRefState::onMouseUp(Editor* editor, MouseMessage* msg)
       Tx tx(writer, "Art Ref Movement", ModifyDocument);
 
       for (const auto& item : m_items) {
-        tx(new cmd::SetArtRefBoundsF(item.artRef, item.oldBounds));
-        item.artRef->setBounds(item.newBounds);
+        // TODO rafaelmfonseca: revisit this logic
+        if (item.artRef->bounds() != gfx::Rect(item.oldBounds)) {
+          tx(new cmd::SetArtRefBoundsF(item.artRef, item.oldBounds));
+          item.artRef->setBounds(item.newBounds);
+        }
       }
 
       tx.commit();
@@ -102,7 +105,7 @@ bool MovingArtRefState::onMouseMove(Editor* editor, MouseMessage* msg)
 
 bool MovingArtRefState::onSetCursor(Editor* editor, const gfx::Point& mouseScreenPos)
 {
-  editor->showMouseCursor(kArrowCursor);
+  editor->showMouseCursor(kMoveCursor);
   return true;
 }
 

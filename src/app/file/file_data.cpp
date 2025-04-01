@@ -492,11 +492,13 @@ void save_aseprite_data_file(const std::string& dataFilename, const doc::Documen
       "id",
       [](const ArtRef* artRef) -> std::string { return artRef->name(); },
       [](ArtRef* artRef, XMLElement* xmlArtRef) {
+        // TODO rafaelmfonseca: extract to separated method
         if (!artRef->text().empty())
-          xmlArtRef->SetAttribute("text", artRef->text().c_str());
+        xmlArtRef->SetAttribute("text", artRef->text().c_str());
         else if (xmlArtRef->Attribute("text"))
-          xmlArtRef->DeleteAttribute("text");
-
+        xmlArtRef->DeleteAttribute("text");
+        
+        // TODO rafaelmfonseca: revisit this logic
         if (artRef->bounds().w > 0 && artRef->bounds().h > 0) {
           XMLElement* xmlPos = xmlArtRef->FirstChildElement("pos");
           if (!xmlPos) {
@@ -506,10 +508,8 @@ void save_aseprite_data_file(const std::string& dataFilename, const doc::Documen
           xmlPos->SetAttribute("y", artRef->bounds().y);
           xmlPos->SetAttribute("w", artRef->bounds().w);
           xmlPos->SetAttribute("h", artRef->bounds().h);
-        } else {
-          if (xmlArtRef->FirstChildElement("pos")) {
-            xmlArtRef->DeleteChild(xmlArtRef->FirstChildElement("pos"));
-          }
+        } else if (xmlArtRef->FirstChildElement("pos")) {
+          xmlArtRef->DeleteChild(xmlArtRef->FirstChildElement("pos"));
         }
       });
 

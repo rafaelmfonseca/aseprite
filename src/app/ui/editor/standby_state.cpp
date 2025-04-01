@@ -17,6 +17,7 @@
 #include "app/commands/cmd_eyedropper.h"
 #include "app/commands/commands.h"
 #include "app/commands/params.h"
+#include "app/commands/cmd_add_art_ref.h"
 #include "app/doc_range.h"
 #include "app/i18n/strings.h"
 #include "app/ini_file.h"
@@ -269,7 +270,17 @@ bool StandbyState::onMouseDown(Editor* editor, MouseMessage* msg)
           editor->setState(EditorStatePtr(newState));
         }
         return true;
-    }
+      default:
+        // Call the add art ref command
+        editor->captureMouse();
+
+        AddArtRefCommand* addArtRef = (AddArtRefCommand*)Commands::instance()->byId(
+          CommandId::AddArtRef());
+
+        addArtRef->executeOnMousePos(UIContext::instance(), editor, msg->position());
+        return true;
+        break;
+      }
   }
 
   // Only if the selected tool or quick tool is selection, we give the
