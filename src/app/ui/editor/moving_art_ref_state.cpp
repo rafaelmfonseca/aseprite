@@ -54,11 +54,7 @@ bool MovingArtRefState::onMouseUp(Editor* editor, MouseMessage* msg)
       Tx tx(writer, "Art Ref Movement", ModifyDocument);
 
       for (const auto& item : m_items) {
-        // TODO rafaelmfonseca: revisit this logic
-        if (item.artRef->bounds() != gfx::Rect(item.oldBounds)) {
-          tx(new cmd::SetArtRefBoundsF(item.artRef, item.oldBounds));
-          item.artRef->setBounds(item.newBounds);
-        }
+        tx(new cmd::SetArtRefBoundsF(item.artRef, item.oldBounds));
       }
 
       tx.commit();
@@ -90,10 +86,10 @@ bool MovingArtRefState::onMouseMove(Editor* editor, MouseMessage* msg)
       rc.y += delta.y;
     }
 
-    item.newBounds = rc;
-
-    if (m_hit.type() == EditorHit::ArtRefBounds)
+    if (m_hit.type() == EditorHit::ArtRefBounds) {
+      item.newBounds = rc;
       item.artRef->setBounds(rc);
+    }
   }
 
   // Redraw the editor.

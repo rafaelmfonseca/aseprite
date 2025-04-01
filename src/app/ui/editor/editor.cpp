@@ -423,7 +423,9 @@ void Editor::getSite(Site* site) const
     site->selectedSlices(m_selectedSlices);
   }
 
-  // TODO rafaelmfonseca: add art refs here
+  if (!m_selectedArtRefs.empty() && getCurrentEditorInk()->isArtRef()) {
+    site->selectedArtRefs(m_selectedArtRefs);
+  }
 
   // TODO we should not access timeline directly here
   Timeline* timeline = App::instance()->timeline();
@@ -1939,13 +1941,13 @@ void Editor::cancelSelections()
 bool Editor::isArtRefSelected(const doc::ArtRef* artRef) const
 {
   ASSERT(artRef);
-  return (m_selectedArtRef.contains(artRef->id()));
+  return (m_selectedArtRefs.contains(artRef->id()));
 }
 
 void Editor::clearArtRefsSelection()
 {
-  if (!m_selectedArtRef.empty()) {
-    m_selectedArtRef.clear();
+  if (!m_selectedArtRefs.empty()) {
+    m_selectedArtRefs.clear();
     invalidate();
 
     if (isActive())
@@ -1956,7 +1958,7 @@ void Editor::clearArtRefsSelection()
 void Editor::selectArtRef(const doc::ArtRef* artRef)
 {
   ASSERT(artRef);
-  m_selectedArtRef.insert(artRef->id());
+  m_selectedArtRefs.insert(artRef->id());
   invalidate();
 
   if (isActive())

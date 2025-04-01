@@ -498,7 +498,7 @@ private:
   doc::SelectedObjects m_selectedSlices;
 
   // For art refs
-  doc::SelectedObjects m_selectedArtRef;
+  doc::SelectedObjects m_selectedArtRefs;
 
   // Active sprite editor with the keyboard focus.
   static Editor* m_activeEditor;
