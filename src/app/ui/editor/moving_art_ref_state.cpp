@@ -4,8 +4,14 @@
 
 #include "app/ui/editor/moving_art_ref_state.h"
 
+#include "app/cmd/set_art_ref_bounds.h"
+#include "app/console.h"
+#include "app/commands/command.h"
+#include "app/commands/commands.h"
+#include "app/tx.h"
 #include "app/ui/editor/editor.h"
 #include "app/ui/editor/editor_hit.h"
+#include "app/ui_context.h"
 #include "ui/message.h"
 
 #include <algorithm>
@@ -40,6 +46,24 @@ MovingArtRefState::MovingArtRefState(Editor* editor,
 
 bool MovingArtRefState::onMouseUp(Editor* editor, MouseMessage* msg)
 {
+  Doc* doc = editor->document();
+
+  {
+    try {
+      ContextWriter writer(UIContext::instance(), 1000);
+      Tx tx(writer, "Art Ref Movement", ModifyDocument);
+
+      for (const auto& item : m_items) {
+        tx(new cmd::SetArtRefBoundsF(item.artRef, item.oldBounds));
+        item.artRef->setBounds(item.newBounds);
+      }
+
+      tx.commit();
+    }
+    catch (const base::Exception& e) {
+      Console::showException(e);
+    }
+  }
   editor->backToPreviousState();
   editor->releaseMouse();
   return true;
@@ -55,13 +79,15 @@ bool MovingArtRefState::onMouseMove(Editor* editor, MouseMessage* msg)
   ASSERT(totalBounds.h > 0);
 
   for (auto& item : m_items) {
-    gfx::Rect rc = item.oldBounds;
+    gfx::Rect rc(item.oldBounds);
 
     // Move art ref
     if (m_hit.border() == (CENTER | MIDDLE)) {
       rc.x += delta.x;
       rc.y += delta.y;
     }
+
+    item.newBounds = rc;
 
     if (m_hit.type() == EditorHit::ArtRefBounds)
       item.artRef->setBounds(rc);
@@ -86,7 +112,8 @@ MovingArtRefState::Item MovingArtRefState::getItemForArtRef(doc::ArtRef* artRef)
 
   Item item;
   item.artRef = artRef;
-  item.oldBounds = gfx::RectF(bounds.x, bounds.y, bounds.w, bounds.h);
+  item.oldBounds = gfx::Rect(bounds);
+  item.newBounds = gfx::Rect(bounds);
 
   return item;
 }

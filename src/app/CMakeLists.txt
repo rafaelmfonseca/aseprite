@@ -342,6 +342,7 @@ target_sources(app-lib PRIVATE
   cmd/set_user_data.cpp
   cmd/set_user_data_properties.cpp
   cmd/set_user_data_property.cpp
+  cmd/set_art_ref_bounds.cpp
   cmd/shift_masked_cel.cpp
   cmd/trim_cel.cpp
   cmd/unlink_cel.cpp
@@ -353,6 +354,7 @@ target_sources(app-lib PRIVATE
   cmd/with_sprite.cpp
   cmd/with_tag.cpp
   cmd/with_tileset.cpp
+  cmd/with_art_ref.cpp
   cmd_sequence.cpp
   cmd_transaction.cpp
   color.cpp

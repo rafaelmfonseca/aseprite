@@ -480,6 +480,42 @@ void save_aseprite_data_file(const std::string& dataFilename, const doc::Documen
     // Save .aseprite-data file
     save_xml(xmlDoc.get(), dataFilename);
   }
+
+  XMLElement* xmlArtRefs =
+    handle.FirstChildElement("sprite").FirstChildElement("artrefs").ToElement();
+
+  if (xmlArtRefs) {
+    update_xml_collection(
+      doc->sprite()->artRefs(),
+      xmlArtRefs,
+      "artref",
+      "id",
+      [](const ArtRef* artRef) -> std::string { return artRef->name(); },
+      [](ArtRef* artRef, XMLElement* xmlArtRef) {
+        if (!artRef->text().empty())
+          xmlArtRef->SetAttribute("text", artRef->text().c_str());
+        else if (xmlArtRef->Attribute("text"))
+          xmlArtRef->DeleteAttribute("text");
+
+        if (artRef->bounds().w > 0 && artRef->bounds().h > 0) {
+          XMLElement* xmlPos = xmlArtRef->FirstChildElement("pos");
+          if (!xmlPos) {
+            xmlPos = xmlArtRef->InsertNewChildElement("pos");
+          }
+          xmlPos->SetAttribute("x", artRef->bounds().x);
+          xmlPos->SetAttribute("y", artRef->bounds().y);
+          xmlPos->SetAttribute("w", artRef->bounds().w);
+          xmlPos->SetAttribute("h", artRef->bounds().h);
+        } else {
+          if (xmlArtRef->FirstChildElement("pos")) {
+            xmlArtRef->DeleteChild(xmlArtRef->FirstChildElement("pos"));
+          }
+        }
+      });
+
+    // Save .aseprite-data file
+    save_xml(xmlDoc.get(), dataFilename);
+  }
 }
 #endif
 
