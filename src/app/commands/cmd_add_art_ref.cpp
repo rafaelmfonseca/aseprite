@@ -6,12 +6,14 @@
 
 #include "app/doc_api.h"
 #include "doc/art_ref.h"
+#include "doc/sprite.h"
 #include "app/cmd/add_art_ref.h"
 #include "app/tx.h"
 #include "app/ui/editor/editor.h"
 #include "app/commands/new_params.h"
 #include "app/modules/gui.h"
 #include "base/base64.h"
+#include "fmt/format.h"
 #include "ui/alert.h"
 
 namespace app {
@@ -37,39 +39,39 @@ void AddArtRefCommand::executeOnMousePos(Context* context,
 {
   ASSERT(editor);
 
-  // Pixel position to get
-  gfx::PointF pixelPos = editor->screenToEditorF(mousePos);
-
-  ArtRef* artRef = new ArtRef;
-
-  // TODO rafaelmfonseca: revisit logic
-  // START: temporary logic
-  static const char alphanum[] =
-      "0123456789"
-      "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-      "abcdefghijklmnopqrstuvwxyz";
-  std::string tmp_s;
-  tmp_s.reserve(10);
-
-  for (int i = 0; i < 10; ++i) {
-      tmp_s += alphanum[rand() % (sizeof(alphanum) - 1)];
-  }
-  // END: temporary logic
-
-  artRef->setName(tmp_s);
-  artRef->setBounds(gfx::Rect(pixelPos.x, pixelPos.y, 4, 4));
-
   ContextWriter writer(context);
   Doc* document(writer.document());
   Sprite* sprite(writer.sprite());
 
+  // Pixel position to get
+  gfx::PointF pixelPos = editor->screenToEditorF(mousePos);
+
   {
     Tx tx(writer, "Add Art Ref");
+
+    ArtRef* artRef = new ArtRef;
+    artRef->setName(getUniqueArtRefName(sprite));
+    artRef->setBounds(gfx::Rect(pixelPos.x, pixelPos.y, 4, 4));
+
     tx(new cmd::AddArtRef(sprite, artRef));
     tx.commit();
   }
 
-  update_screen_for_document(document);
+  if (context->isUIAvailable()) {
+    update_screen_for_document(document);
+  }
+}
+
+std::string AddArtRefCommand::getUniqueArtRefName(const doc::Sprite* sprite) const
+{
+  std::string prefix = "ArtRef";
+  int max = 0;
+
+  for (ArtRef* artRef : sprite->artRefs())
+    if (std::strncmp(artRef->name().c_str(), prefix.c_str(), prefix.size()) == 0)
+      max = std::max(max, (int)std::strtol(artRef->name().c_str() + prefix.size(), nullptr, 10));
+
+  return fmt::format("{} {}", prefix, max + 1);
 }
 
 Command* CommandFactory::createAddArtRefCommand()

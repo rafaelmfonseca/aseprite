@@ -4,6 +4,7 @@
 
 #include "app/commands/command.h"
 #include "app/commands/new_params.h"
+#include "doc/sprite.h"
 #include "gfx/point.h"
 
 namespace app {
@@ -21,6 +22,9 @@ public:
 protected:
   bool onEnabled(Context* ctx) override;
   void onExecute(Context* ctx) override;
+
+private:
+  std::string getUniqueArtRefName(const doc::Sprite* sprite) const;
 };
 
 } // namespace app
