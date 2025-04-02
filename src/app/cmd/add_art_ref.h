@@ -11,8 +11,6 @@
 #include <sstream>
 
 namespace app { namespace cmd {
-class Editor;
-class Site;
 using namespace doc;
 
 class AddArtRef : public Cmd,

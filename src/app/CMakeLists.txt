@@ -356,6 +356,7 @@ target_sources(app-lib PRIVATE
   cmd/with_tileset.cpp
   cmd/with_art_ref.cpp
   cmd/add_art_ref.cpp
+  cmd/remove_art_ref.cpp
   cmd_sequence.cpp
   cmd_transaction.cpp
   color.cpp
@@ -394,6 +395,7 @@ target_sources(app-lib PRIVATE
   commands/cmd_export_sprite_sheet.cpp
   commands/cmd_eyedropper.cpp
   commands/cmd_add_art_ref.cpp
+  commands/cmd_remove_art_ref.cpp
   commands/cmd_fill_and_stroke.cpp
   commands/cmd_fit_screen.cpp
   commands/cmd_flatten_layers.cpp
