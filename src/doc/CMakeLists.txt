@@ -83,6 +83,7 @@ add_library(doc-lib
   user_data.cpp
   user_data_io.cpp
   util.cpp
+  art_ref_io.cpp
   art_ref.cpp
   art_refs.cpp)
 

@@ -5,6 +5,9 @@
 #include "app/cmd/add_art_ref.h"
 
 #include "app/doc.h"
+#include "app/doc_event.h"
+#include "doc/art_ref.h"
+#include "doc/art_ref_io.h"
 #include "doc/sprite.h"
 
 namespace app { namespace cmd {
@@ -25,20 +28,16 @@ void AddArtRef::onExecute()
 
 void AddArtRef::onUndo()
 {
-  /*
   Sprite* sprite = this->sprite();
   ArtRef* artRef = this->artRef();
-
   write_art_ref(m_stream, artRef);
   m_size = size_t(m_stream.tellp());
 
   removeArtRef(sprite, artRef);
-  */
 }
 
 void AddArtRef::onRedo()
 {
-  /*
   Sprite* sprite = this->sprite();
   ArtRef* artRef = read_art_ref(m_stream);
 
@@ -47,7 +46,6 @@ void AddArtRef::onRedo()
   m_stream.str(std::string());
   m_stream.clear();
   m_size = 0;
-  */
 }
 
 void AddArtRef::addArtRef(Sprite* sprite, ArtRef* artRef)
@@ -78,6 +76,5 @@ void AddArtRef::removeArtRef(Sprite* sprite, ArtRef* artRef)
   sprite->incrementVersion();
   delete artRef;
 }
-
 
 }} // namespace app::cmd
