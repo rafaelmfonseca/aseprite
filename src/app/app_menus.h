@@ -58,6 +58,7 @@ public:
   Menu* getInkPopupMenu() { return m_inkPopupMenu.get(); }
   Menu* getAnimationMenu();
   Menu* getNewFrameMenu() { return m_newFramePopupMenu.get(); }
+  Menu* getArtRefPopupMenu() { return m_artRefPopupMenu.get(); }
 
   void applyShortcutToMenuitemsWithCommand(Command* command,
                                            const Params& params,
@@ -111,6 +112,7 @@ private:
   std::unique_ptr<Menu> m_palettePopupMenu;
   std::unique_ptr<Menu> m_inkPopupMenu;
   std::unique_ptr<Menu> m_newFramePopupMenu;
+  std::unique_ptr<Menu> m_artRefPopupMenu;
   obs::scoped_connection m_recentFilesConn;
   std::vector<Menu*> m_menus;
   // List of recent menu items pointing to recent files.

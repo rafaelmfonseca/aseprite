@@ -367,6 +367,7 @@ void AppMenus::reload()
   m_palettePopupMenu.reset(loadMenuById(handle, "palette_popup_menu"));
   m_inkPopupMenu.reset(loadMenuById(handle, "ink_popup_menu"));
   m_newFramePopupMenu.reset(loadMenuById(handle, "new_frame_popup_menu"));
+  m_artRefPopupMenu.reset(loadMenuById(handle, "art_ref_popup_menu"));
 
   // Add one menu item to run each script from the user scripts/ folder
   {
@@ -874,6 +875,7 @@ void AppMenus::updateMenusList()
   m_menus.push_back(m_palettePopupMenu.get());
   m_menus.push_back(m_inkPopupMenu.get());
   m_menus.push_back(m_newFramePopupMenu.get());
+  m_menus.push_back(m_artRefPopupMenu.get());
 }
 
 void AppMenus::createNativeMenus()

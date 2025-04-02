@@ -1283,6 +1283,11 @@
       <item command="SetSameInk" text="@general.same_in_all_tools" group="ink_options" />
     </menu>
 
+    <menu id="art_ref_popup_menu">
+      <item command="ArtRefProperties" text="@.properties" group="art_ref_popup_properties" />
+      <item command="RemoveArtRef" text="@.delete" group="art_ref_popup_delete" />
+    </menu>
+
   </menus>
 
   <!-- tools -->

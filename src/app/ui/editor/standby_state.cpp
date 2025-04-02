@@ -269,6 +269,17 @@ bool StandbyState::onMouseDown(Editor* editor, MouseMessage* msg)
             new MovingArtRefState(editor, msg, hit, site.selectedArtRefs());
           editor->setState(EditorStatePtr(newState));
         }
+        else {
+          Menu* popupMenu = AppMenus::instance()->getArtRefPopupMenu();
+          if (popupMenu) {
+            Params params;
+            if (!editor->hasSelectedArtRefs())
+              params.set("id", base::convert_to<std::string>(hit.artRef()->id()).c_str());
+            AppMenuItem::setContextParams(params);
+            popupMenu->showPopup(msg->position(), editor->display());
+            AppMenuItem::setContextParams(Params());
+          }
+        }
         return true;
       default:
         // Call the add art ref command

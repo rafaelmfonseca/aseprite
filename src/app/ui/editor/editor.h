@@ -303,11 +303,12 @@ public:
   bool selectSliceBox(const gfx::Rect& box);
   void selectAllSlices();
   bool hasSelectedSlices() const { return !m_selectedSlices.empty(); }
-
+  
   // Functions to handle the set of selected art references.
   bool isArtRefSelected(const doc::ArtRef* artRef) const;
   void clearArtRefsSelection();
   void selectArtRef(const doc::ArtRef* artRef);
+  bool hasSelectedArtRefs() const { return !m_selectedArtRefs.empty(); }
 
   // Called by DocView's InputChainElement::onCancel() impl when Esc
   // key is pressed to cancel the active selection.
