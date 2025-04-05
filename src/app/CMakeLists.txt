@@ -396,6 +396,7 @@ target_sources(app-lib PRIVATE
   commands/cmd_eyedropper.cpp
   commands/cmd_add_art_ref.cpp
   commands/cmd_remove_art_ref.cpp
+  commands/cmd_art_ref_properties.cpp
   commands/cmd_fill_and_stroke.cpp
   commands/cmd_fit_screen.cpp
   commands/cmd_flatten_layers.cpp

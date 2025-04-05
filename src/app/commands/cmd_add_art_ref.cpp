@@ -44,7 +44,7 @@ void AddArtRefCommand::executeOnMousePos(Context* context,
   Sprite* sprite(writer.sprite());
 
   // Pixel position to get
-  gfx::PointF pixelPos = editor->screenToEditorF(mousePos);
+  gfx::Point pixelPos = editor->screenToEditor(mousePos);
 
   {
     Tx tx(writer, "Add Art Ref");
