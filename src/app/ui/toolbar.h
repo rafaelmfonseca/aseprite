@@ -1,4 +1,5 @@
 // Aseprite
+// Copyright (C) 2025  Igara Studio S.A.
 // Copyright (C) 2001-2018  David Capello
 //
 // This program is distributed under the terms of
@@ -54,18 +55,24 @@ public:
 protected:
   bool onProcessMessage(ui::Message* msg) override;
   void onSizeHint(ui::SizeHintEvent& ev) override;
+  void onResize(ui::ResizeEvent& ev) override;
   void onPaint(ui::PaintEvent& ev) override;
   void onVisible(bool visible) override;
 
 private:
+  enum class GroupType { Regular, Overflow };
+
   int getToolGroupIndex(tools::ToolGroup* group);
-  void openPopupWindow(int group_index, tools::ToolGroup* group);
+  void openPopupWindow(GroupType group_type,
+                       int group_index = 0,
+                       tools::ToolGroup* tool_group = nullptr);
   void closePopupWindow();
   gfx::Rect getToolGroupBounds(int group_index);
-  gfx::Point getToolPositionInGroup(int group_index, tools::Tool* tool);
+  gfx::Point getToolPositionInGroup(const tools::Tool* tool) const;
   void openTipWindow(int group_index, tools::Tool* tool);
   void onClosePopup();
   void drawToolIcon(ui::Graphics* g, int group_index, skin::SkinPartPtr skin, os::Surface* icon);
+  int getHiddenGroups() const;
 
   // ActiveToolObserver impl
   void onActiveToolChange(tools::Tool* tool) override;
@@ -97,6 +104,9 @@ private:
 
   ui::Timer m_tipTimer;
   bool m_tipOpened;
+
+  // Minimum height for all the top toolbar buttons to be visible.
+  int m_minHeight;
 
   obs::connection m_closeConn;
 };
