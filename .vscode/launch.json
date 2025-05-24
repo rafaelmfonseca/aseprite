@@ -1,0 +1,18 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug Aseprite",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/bin/aseprite.exe",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/build/bin",
+            "environment": [],
+            "console": "integratedTerminal",
+            "symbolSearchPath": "${workspaceFolder}/build",
+            "preLaunchTask": "build"
+        }
+    ]
+}
