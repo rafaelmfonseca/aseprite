@@ -14,6 +14,7 @@
 #include "ui/display.h"
 #include "ui/keys.h"
 #include "ui/layer.h"
+#include "ui/message.h"
 #include "ui/message_type.h"
 #include "ui/mouse_button.h"
 #include "ui/pointer_type.h"
@@ -63,6 +64,10 @@ public:
   bool generateMessages();
   void dispatchMessages();
 
+  // Wakes up the system's events queue to process the currently enqueued UI
+  // messages.
+  void flushMessages() const;
+
   // Makes the generateMessages() function to return immediately if
   // there is no user events in the OS queue. Useful only for tests
   // or benchmarks where we don't wait the user (or we don't even
@@ -81,7 +86,7 @@ public:
   Widget* getMouse();
   Widget* getCapture();
 
-  void setFocus(Widget* widget);
+  void setFocus(Widget* widget, FocusMessage::Source source = FocusMessage::Source::Other);
   void setMouse(Widget* widget);
   void setCapture(Widget* widget, bool force = false);
   void attractFocus(Widget* widget);
@@ -193,7 +198,6 @@ private:
   int pumpQueue();
   bool sendMessageToWidget(Message* msg, Widget* widget);
 
-  Widget* findForDragAndDrop(Widget* widget);
   void dragEnter(os::DragEvent& ev) override;
   void dragLeave(os::DragEvent& ev) override;
   void drag(os::DragEvent& ev) override;

@@ -115,8 +115,8 @@ bool IntEntry::onProcessMessage(Message* msg)
     case kKeyDownMessage:
       if (hasFocus() && !isReadOnly()) {
         KeyMessage* keymsg = static_cast<KeyMessage*>(msg);
-        int chr = keymsg->unicodeChar();
-        if (chr >= 32 && (chr < '0' || chr > '9')) {
+        const int chr = keymsg->unicodeChar();
+        if (chr >= 32 && !onAcceptUnicodeChar(chr)) {
           // "Eat" all keys that aren't number
           return true;
         }
@@ -141,7 +141,7 @@ void IntEntry::onSizeHint(SizeHintEvent& ev)
 {
   const text::FontRef& font = this->font();
   int trailing = font->textLength(getSuffix());
-  trailing = std::max(trailing, 2 * theme()->getEntryCaretSize(this).w);
+  trailing = std::max(trailing, 2 * theme()->getCaretSize(this).w);
 
   int min_w = font->textLength(m_slider->convertValueToText(m_min));
   int max_w = font->textLength(m_slider->convertValueToText(m_max)) + trailing;
@@ -164,6 +164,11 @@ void IntEntry::onChange()
 void IntEntry::onValueChange()
 {
   // Do nothing
+}
+
+bool IntEntry::onAcceptUnicodeChar(const int unicodeChar)
+{
+  return (unicodeChar >= '0' && unicodeChar <= '9');
 }
 
 void IntEntry::openPopup()

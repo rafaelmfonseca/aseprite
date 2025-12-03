@@ -26,7 +26,6 @@
 #include "app/ui/keyboard_shortcuts.h"
 #include "app/ui/main_window.h"
 #include "app/ui_context.h"
-#include "app/util/filetoks.h"
 #include "base/fs.h"
 #include "base/string.h"
 #include "fmt/format.h"
@@ -110,14 +109,15 @@ bool can_call_global_shortcut(const AppMenuItem::Native* native)
     // prefer text input, so we cannot call shortcuts without
     // modifiers (e.g. F or T keystrokes) to trigger a global command
     // in a text field.
-    (focus == nullptr || focus->type() != ui::kEntryWidget ||
+    (focus == nullptr ||
+     (focus->type() != ui::kEntryWidget && focus->type() != ui::kTextEditWidget) ||
      !is_text_entry_shortcut(native->shortcut)) &&
     (native->keyContext == KeyContext::Any ||
-     native->keyContext == KeyboardShortcuts::instance()->getCurrentKeyContext());
+     native->keyContext == KeyboardShortcuts::getCurrentKeyContext());
 }
 
-// TODO this should be on "she" library (or we should use
-// os::Shortcut instead of ui::Accelerators)
+// TODO this should be on laf-os library (or we should use
+// os::Shortcut instead of ui::Shortcuts)
 int from_scancode_to_unicode(KeyScancode scancode)
 {
   static int map[] = {
@@ -284,22 +284,21 @@ void destroy_menu_item(ui::Widget* item)
 
 os::Shortcut get_os_shortcut_from_key(const Key* key)
 {
-  if (key && !key->accels().empty()) {
-    const ui::Accelerator& accel = key->accels().front();
+  if (key && !key->shortcuts().empty()) {
+    const ui::Shortcut& shortcut = key->shortcuts().front();
 
 #if LAF_MACOS
     // Shortcuts with spacebar as modifier do not work well in macOS
     // (they will be called when the space bar is unpressed too).
-    if ((accel.modifiers() & ui::kKeySpaceModifier) == ui::kKeySpaceModifier)
+    if ((shortcut.modifiers() & ui::kKeySpaceModifier) == ui::kKeySpaceModifier)
       return os::Shortcut();
 #endif
 
-    return os::Shortcut(
-      (accel.unicodeChar() ? accel.unicodeChar() : from_scancode_to_unicode(accel.scancode())),
-      accel.modifiers());
+    return os::Shortcut((shortcut.unicodeChar() ? shortcut.unicodeChar() :
+                                                  from_scancode_to_unicode(shortcut.scancode())),
+                        shortcut.modifiers());
   }
-  else
-    return os::Shortcut();
+  return {};
 }
 
 AppMenus* AppMenus::s_instance = nullptr;
@@ -464,6 +463,8 @@ void AppMenus::reload()
   // Create native menus after the default + user defined keyboard
   // shortcuts are loaded correctly.
   createNativeMenus();
+
+  MenusLoaded();
 }
 
 #ifdef ENABLE_SCRIPTING

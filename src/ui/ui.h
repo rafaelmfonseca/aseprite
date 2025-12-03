@@ -9,7 +9,6 @@
 #define UI_UI_H_INCLUDED
 #pragma once
 
-#include "ui/accelerator.h"
 #include "ui/alert.h"
 #include "ui/app_state.h"
 #include "ui/base.h"
@@ -56,13 +55,17 @@
 #include "ui/scale.h"
 #include "ui/scroll_bar.h"
 #include "ui/scroll_helper.h"
+#include "ui/scroll_window.h"
 #include "ui/separator.h"
+#include "ui/shortcut.h"
 #include "ui/size_hint_event.h"
 #include "ui/slider.h"
 #include "ui/splitter.h"
 #include "ui/style.h"
 #include "ui/system.h"
 #include "ui/textbox.h"
+#include "ui/textcmd.h"
+#include "ui/textedit.h"
 #include "ui/theme.h"
 #include "ui/timer.h"
 #include "ui/tooltips.h"

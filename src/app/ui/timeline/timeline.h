@@ -13,6 +13,7 @@
 #include "app/docs_observer.h"
 #include "app/loop_tag.h"
 #include "app/pref/preferences.h"
+#include "app/ui/dockable.h"
 #include "app/ui/editor/editor_observer.h"
 #include "app/ui/input_chain_element.h"
 #include "app/ui/timeline/ani_controls.h"
@@ -48,6 +49,7 @@ namespace ui {
 class Graphics;
 class TooltipManager;
 class DragEvent;
+struct PaintWidgetPartInfo;
 } // namespace ui
 
 namespace app {
@@ -72,7 +74,8 @@ class Timeline : public ui::Widget,
                  public DocObserver,
                  public EditorObserver,
                  public InputChainElement,
-                 public TagProvider {
+                 public TagProvider,
+                 public Dockable {
 public:
   using Range = view::Range;
   using RealRange = view::RealRange;
@@ -103,6 +106,8 @@ public:
     STATE_DISABLING_CONTINUOUS_LAYERS,
     STATE_EXPANDING_LAYERS,
     STATE_COLLAPSING_LAYERS,
+    // Drag & drop handling state
+    STATE_DRAGGING_EXTERNAL_RANGE,
   };
 
   enum DropOp { kMove, kCopy };
@@ -151,6 +156,14 @@ public:
   void unlockRange();
 
   void clearAndInvalidateRange();
+
+  void refresh();
+
+  // Dockable impl
+  int dockableAt() const override
+  {
+    return ui::TOP | ui::BOTTOM | ui::LEFT | ui::RIGHT | ui::EXPANSIVE;
+  }
 
 protected:
   bool onProcessMessage(ui::Message* msg) override;
@@ -311,6 +324,10 @@ private:
                      gfx::Color tagColor,
                      const gfx::Rect& bounds,
                      const gfx::Rect& clipBounds);
+  void paintDropFrameDeco(ui::Graphics* g, ui::PaintWidgetPartInfo info, gfx::Rect dropBounds);
+  void paintDropLayerDeco(ui::Graphics* g,
+                          const ui::PaintWidgetPartInfo& info,
+                          gfx::Rect dropBounds);
   void drawRangeOutline(ui::Graphics* g);
   void drawPaddings(ui::Graphics* g);
   bool drawPart(ui::Graphics* g, int part, layer_t layer, col_t frame);
@@ -320,6 +337,8 @@ private:
   gfx::Rect getOnionskinFramesBounds() const;
   gfx::Rect getCelsBounds() const;
   gfx::Rect getPartBounds(const Hit& hit) const;
+  gfx::Rect getSelectedFramesBounds(const Range& range) const;
+  gfx::Rect getSelectedLayersBounds(const Range& range) const;
   gfx::Rect getRangeBounds(const Range& range) const;
   gfx::Rect getRangeClipBounds(const Range& range) const;
   int getFrameXPos(const col_t frame) const;

@@ -42,6 +42,7 @@
 #include "text/font.h"
 #include "text/font_metrics.h"
 #include "text/font_style_set.h"
+#include "text/text_blob.h"
 #include "ui/intern.h"
 #include "ui/ui.h"
 
@@ -257,6 +258,9 @@ static FontData* load_font(const XMLElement* xmlFont, const std::string& xmlFile
     if (xmlFont->Attribute("antialias"))
       antialias = bool_attr(xmlFont, "antialias", false);
 
+    text::FontHinting hinting = (bool_attr(xmlFont, "hinting", true) ? text::FontHinting::Normal :
+                                                                       text::FontHinting::None);
+
     std::string fontFilename;
     if (platformFileStr)
       fontFilename = app::find_font(xmlDir, platformFileStr);
@@ -270,6 +274,7 @@ static FontData* load_font(const XMLElement* xmlFont, const std::string& xmlFile
     font->setName(nameStr ? nameStr : (platformFileStr ? platformFileStr : fileStr));
     font->setFilename(fontFilename);
     font->setAntialias(antialias);
+    font->setHinting(hinting);
 
     if (!fontFilename.empty())
       LOG(VERBOSE, "THEME: Font file '%s' found\n", fontFilename.c_str());
@@ -311,6 +316,9 @@ static FontData* load_font(const XMLElement* xmlFont, const std::string& xmlFile
     if (!font && systemStr) {
       font = try_to_load_system_font(xmlFont);
     }
+
+    if (font && nameStr)
+      font->setName(nameStr);
   }
   else {
     throw base::Exception(
@@ -536,8 +544,7 @@ void SkinTheme::loadXml(BackwardCompatibility* backward)
         float size = 0.0f;
         if (const char* sizeStr = xmlFont->Attribute("size"))
           size = std::strtof(sizeStr, nullptr);
-
-        if (fontData->defaultSize() != 0.0f)
+        if (size == 0.0f && fontData->defaultSize() != 0.0f)
           size = fontData->defaultSize();
 
         const char* mnemonicsStr = xmlFont->Attribute("mnemonics");
@@ -545,9 +552,23 @@ void SkinTheme::loadXml(BackwardCompatibility* backward)
 
         text::FontRef font = fontData->getFont(m_fontMgr, size * ui::guiscale());
 
-        // SpriteSheetFonts have a default preferred size.
-        if (size == 0.0f && font->defaultSize() > 0.0f) {
-          size = font->defaultSize();
+        // No font?
+        if (font == nullptr) {
+          LOG(ERROR, "THEME: Error loading font for theme %s\n", idStr);
+          xmlFont = xmlFont->NextSiblingElement();
+          continue;
+        }
+
+        if (size == 0.0f) {
+          // SpriteSheetFonts have a default preferred size.
+          if (font->defaultSize() > 0.0f) {
+            size = font->defaultSize();
+          }
+          // For some user extensions, we need to specify at least a
+          // default size of 10 for TTF theme fonts.
+          else {
+            size = 10.0f;
+          }
           font = fontData->getFont(m_fontMgr, size * ui::guiscale());
         }
 
@@ -1212,6 +1233,8 @@ void SkinTheme::initWidget(Widget* widget)
       widget->setStyle(styles.textboxText());
       break;
 
+    case kTextEditWidget: widget->setStyle(styles.textedit()); break;
+
     case kViewWidget:
       widget->setChildSpacing(0);
       widget->setBgColor(colors.windowFace());
@@ -1273,12 +1296,55 @@ int SkinTheme::getScrollbarSize()
   return dimensions.scrollbarSize();
 }
 
-gfx::Size SkinTheme::getEntryCaretSize(Widget* widget)
+gfx::Size SkinTheme::getCaretSize(Widget* widget)
 {
+  int caretHeight;
+  if (widget->type() == kTextEditWidget) {
+    // We cannot use the height of the widget text, because it
+    // includes the line height of every single line in the widget.
+    caretHeight = widget->font()->lineHeight();
+  }
+  else {
+    caretHeight = widget->textHeight();
+  }
+
   if (widget->font()->type() == text::FontType::FreeType)
-    return gfx::Size(2 * guiscale(), widget->textHeight());
+    return gfx::Size(2 * guiscale(), caretHeight);
   else
-    return gfx::Size(2 * guiscale(), widget->textHeight() + 2 * guiscale());
+    return gfx::Size(2 * guiscale(), caretHeight + 2 * guiscale());
+}
+
+Theme::TextColors SkinTheme::getTextColors(Widget* widget)
+{
+  Theme::TextColors c;
+
+  // Default colors
+  c.text = Paint(colors.textboxText());
+  c.background = Paint(colors.textboxFace());
+  c.selectedText = Paint(colors.selectedText());
+  c.selectedBackground = Paint(colors.selected());
+
+  // Try to get colors from the widget style
+  if (ui::Style* style = widget->style()) {
+    for (auto& layer : style->layers()) {
+      switch (layer.type()) {
+        case ui::Style::Layer::Type::kBackground:
+          if (layer.flags() & ui::Style::Layer::kSelected)
+            c.selectedBackground.color(layer.color());
+          else
+            c.background.color(layer.color());
+          break;
+        case ui::Style::Layer::Type::kText:
+          if (layer.flags() & ui::Style::Layer::kSelected)
+            c.selectedText.color(layer.color());
+          else
+            c.text.color(layer.color());
+          break;
+      }
+    }
+  }
+
+  return c;
 }
 
 void SkinTheme::paintEntry(PaintEvent& ev)
@@ -1329,11 +1395,32 @@ public:
     , m_h(h)
   {
     m_widget->getEntryThemeInfo(&m_index, &m_caret, &m_state, &m_range);
+    m_suffixIndex = m_widget->text().size();
   }
 
   int index() const { return m_index; }
   bool caretDrawn() const { return m_caretDrawn; }
   const gfx::Rect& textBounds() const { return m_textBounds; }
+
+  bool isSelectedChar(const int index) override
+  {
+    return ((index >= m_range.from) && (index < m_range.to));
+  }
+
+  void drawSelectionBg(const gfx::RectF& bounds) override
+  {
+    auto* theme = SkinTheme::get(m_widget);
+    auto& colors = theme->colors;
+    gfx::Color bg = ColorNone;
+
+    if (m_widget->hasFocus())
+      bg = colors.selected();
+    else
+      bg = colors.disabled();
+
+    if (bg != ColorNone)
+      m_graphics->fillRect(bg, gfx::Rect(bounds.x - m_widget->bounds().x, m_y, bounds.w, m_h));
+  }
 
   void preProcessChar(const int index,
                       const base::codepoint_t codepoint,
@@ -1341,29 +1428,26 @@ public:
                       gfx::Color& bg,
                       const gfx::Rect& charBounds) override
   {
-    auto theme = SkinTheme::get(m_widget);
+    auto* theme = SkinTheme::get(m_widget);
 
     // Normal text
     auto& colors = theme->colors;
-    bg = ColorNone;
     fg = colors.text();
 
+    // Suffix text
+    if (m_index >= m_suffixIndex) {
+      fg = colors.entrySuffix();
+    }
+
     // Selected
-    if ((m_index >= m_range.from) && (m_index < m_range.to)) {
-      if (m_widget->hasFocus())
-        bg = colors.selected();
-      else
-        bg = colors.disabled();
+    if (isSelectedChar(m_index)) {
       fg = colors.selectedText();
     }
 
     // Disabled
     if (!m_widget->isEnabled()) {
-      bg = ColorNone;
       fg = colors.disabled();
     }
-
-    m_bg = bg;
   }
 
   bool preDrawChar(const gfx::Rect& charBounds) override
@@ -1372,14 +1456,6 @@ public:
     m_charStartX = charBounds.x;
 
     if (charBounds.x2() - m_widget->bounds().x < m_widget->clientBounds().x2()) {
-      if (m_bg != ColorNone) {
-        // Fill background e.g. needed for selected/highlighted
-        // regions with TTF fonts where the char is smaller than the
-        // text bounds [m_y,m_y+m_h)
-        gfx::Rect fillThisRect(m_lastX - m_widget->bounds().x, m_y, charBounds.x2() - m_lastX, m_h);
-        if (charBounds != fillThisRect)
-          m_graphics->fillRect(m_bg, fillThisRect);
-      }
       m_lastX = charBounds.x2();
       return true;
     }
@@ -1408,10 +1484,10 @@ private:
   Entry::Range m_range;
   gfx::Rect m_textBounds;
   bool m_caretDrawn;
-  gfx::Color m_bg;
   int m_lastX; // Last position used to fill the background
   int m_y, m_h;
   int m_charStartX;
+  int m_suffixIndex;
 };
 
 } // anonymous namespace
@@ -1424,50 +1500,41 @@ void SkinTheme::drawEntryText(ui::Graphics* g, ui::Entry* widget)
   DrawEntryTextDelegate delegate(widget, g, bounds.origin(), widget->textHeight());
   int scroll = delegate.index();
 
-  if (!widget->text().empty()) {
-    const std::string& textString = widget->text();
-    base::utf8_decode dec(textString);
+  const std::string& fullText = widget->text() + widget->getSuffix();
+
+  // Full text to paint: widget text + suffix or placeholder
+  const std::string& paintText = fullText.empty() ? widget->placeholder() : fullText;
+
+  if (!paintText.empty()) {
+    base::utf8_decode dec(paintText);
     auto pos = dec.pos();
     for (int i = 0; i < scroll && dec.next(); ++i)
       pos = dec.pos();
 
     IntersectClip clip(g, bounds);
     if (clip) {
-      text::FontMetrics metrics;
-      widget->font()->metrics(&metrics);
-      const float baselineShift = -metrics.ascent - widget->textBlob()->baseline();
+      int baselineAdjustment = widget->textBaseline();
+      if (auto blob = widget->textBlob()) {
+        baselineAdjustment -= blob->baseline();
+      }
+      else {
+        text::FontMetrics metrics;
+        widget->font()->metrics(&metrics);
+        baselineAdjustment += metrics.ascent;
+      }
 
-      g->drawTextWithDelegate(std::string(pos, textString.end()), // TODO use a string_view()
-                              colors.text(),
+      g->drawTextWithDelegate(std::string(pos, paintText.end()), // TODO use a string_view()
+                              fullText.empty() ? colors.disabled() : colors.text(),
                               ColorNone,
-                              gfx::Point(bounds.x, bounds.y + baselineShift),
+                              gfx::Point(bounds.x, baselineAdjustment),
                               &delegate);
-    }
-  }
-
-  bounds.x += delegate.textBounds().w;
-
-  // Draw suffix if there is enough space
-  if (!widget->getSuffix().empty()) {
-    Rect sufBounds(bounds.x,
-                   bounds.y,
-                   bounds.x2() - widget->childSpacing() - bounds.x,
-                   widget->textHeight());
-    IntersectClip clip(g, sufBounds & widget->clientChildrenBounds());
-    if (clip) {
-      drawText(g,
-               widget->getSuffix().c_str(),
-               colors.entrySuffix(),
-               ColorNone,
-               widget,
-               sufBounds,
-               widget->align(),
-               0);
     }
   }
 
   // Draw caret at the end of the text
   if (!delegate.caretDrawn()) {
+    bounds.x += delegate.textBounds().w;
+
     gfx::Rect charBounds(bounds.x + widget->bounds().x,
                          bounds.y + widget->bounds().y,
                          0,
@@ -1577,13 +1644,13 @@ void SkinTheme::paintMenuItem(ui::PaintEvent& ev)
     }
     // Draw the keyboard shortcut
     else if (AppMenuItem* appMenuItem = dynamic_cast<AppMenuItem*>(widget)) {
-      if (appMenuItem->key() && !appMenuItem->key()->accels().empty()) {
+      if (appMenuItem->key() && !appMenuItem->key()->shortcuts().empty()) {
         int old_align = appMenuItem->align();
 
         pos = bounds;
         pos.w -= widget->childSpacing() / 4;
 
-        std::string buf = appMenuItem->key()->accels().front().toString();
+        std::string buf = appMenuItem->key()->shortcuts().front().toString();
 
         widget->setAlign(RIGHT | MIDDLE);
         drawText(g, buf.c_str(), fg, ColorNone, widget, pos, widget->align(), 0);
@@ -1845,7 +1912,7 @@ void SkinTheme::drawEntryCaret(ui::Graphics* g, Entry* widget, int x, int y)
 {
   gfx::Color color = colors.text();
   int textHeight = widget->textHeight();
-  gfx::Size caretSize = getEntryCaretSize(widget);
+  gfx::Size caretSize = getCaretSize(widget);
 
   for (int u = x; u < x + caretSize.w; ++u)
     g->drawVLine(color, u, y + textHeight / 2 - caretSize.h / 2, caretSize.h);

@@ -1,5 +1,5 @@
 # Aseprite UI Library
-# Copyright (C) 2019-2024  Igara Studio S.A.
+# Copyright (C) 2019-2025  Igara Studio S.A.
 # Copyright (C) 2001-2018  David Capello
 
 if(WIN32)
@@ -7,7 +7,6 @@ if(WIN32)
 endif()
 
 add_library(ui-lib
-  accelerator.cpp
   alert.cpp
   app_state.cpp
   box.cpp
@@ -43,13 +42,17 @@ add_library(ui-lib
   resize_event.cpp
   scroll_bar.cpp
   scroll_helper.cpp
+  scroll_window.cpp
   separator.cpp
+  shortcut.cpp
   size_hint_event.cpp
   slider.cpp
   splitter.cpp
   style.cpp
   system.cpp
   textbox.cpp
+  textcmd.cpp
+  textedit.cpp
   theme.cpp
   timer.cpp
   tooltips.cpp

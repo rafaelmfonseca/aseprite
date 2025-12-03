@@ -58,6 +58,7 @@
 #include "app/util/tile_flags_utils.h"
 #include "base/chrono.h"
 #include "base/convert_to.h"
+#include "base/scoped_value.h"
 #include "doc/doc.h"
 #include "doc/mask_boundaries.h"
 #include "doc/slice.h"
@@ -134,6 +135,8 @@ private:
 
 // static
 Editor* Editor::m_activeEditor = nullptr;
+std::unique_ptr<Mask> Editor::m_selectionToolMask = nullptr;
+std::unique_ptr<MaskBoundaries> Editor::m_selectionToolMaskBoundaries = nullptr;
 
 // static
 std::unique_ptr<EditorRender> Editor::m_renderEngine = nullptr;
@@ -265,6 +268,23 @@ WidgetType Editor::Type()
 void Editor::setStateInternal(const EditorStatePtr& newState)
 {
   m_brushPreview.hide();
+
+  // Some onLeaveState impls (like the ones from MovingPixelsState,
+  // WritingTextState, MovingSelectionState) might generate a
+  // Tx/Transaction::commit(), which will add a new undo state,
+  // triggering a sprite change scripting event
+  // (SpriteEvents::onAddUndoState). This event could be handled by an
+  // extension and that extension might want to save the current
+  // sprite (e.g. calling Sprite_saveCopyAs, the kind of extension
+  // that takes snapshots after each sprite change). That will be a
+  // new Context::executeCommand() for the save command, generating a
+  // BeforeCommandExecution signal, getting back to onLeaveState
+  // again. In that case, we just ignore the reentry as the first
+  // onLeaveState should handle everything (to avoid an stack
+  // overflow/infinite recursion).
+  if (m_leavingState)
+    return;
+  base::ScopedValue leaving(m_leavingState, true);
 
   // Fire before change state event, set the state, and fire after
   // change state event.
@@ -772,7 +792,15 @@ void Editor::drawOneSpriteUnclippedRect(ui::Graphics* g,
       else
         p.blendMode(os::BlendMode::Src);
 
-      g->drawSurface(rendered.get(), gfx::Rect(0, 0, rc2.w, rc2.h), dest, sampling, &p);
+      gfx::Rect destClip = dest;
+      if (m_proj.scaleX() < 1.0)
+        --destClip.w;
+      if (m_proj.scaleY() < 1.0)
+        --destClip.h;
+
+      IntersectClip clip(g, destClip);
+      if (clip)
+        g->drawSurface(rendered.get(), gfx::Rect(0, 0, rc2.w, rc2.h), dest, sampling, &p);
     }
     else {
       g->drawSurface(rendered.get(),
@@ -962,6 +990,13 @@ void Editor::drawSpriteUnclippedRect(ui::Graphics* g, const gfx::Rect& _rc)
                        m_proj.applyY(m_sprite->height()));
   gfx::Rect enclosingRect = spriteRect;
 
+  // Redraw the background when the selection tool mask draws over it
+  static bool redrawBackground = false;
+  if (redrawBackground) {
+    drawBackground(g);
+    redrawBackground = false;
+  }
+
   // Draw the main sprite at the center.
   drawOneSpriteUnclippedRect(g, rc, 0, 0);
 
@@ -1012,9 +1047,20 @@ void Editor::drawSpriteUnclippedRect(ui::Graphics* g, const gfx::Rect& _rc)
     }
   }
 
-  // Draw the mask
+  // Draw the current selection mask
   if (m_document->hasMaskBoundaries())
     drawMask(g);
+
+  // If we are in a selection tool and the user has the new selection
+  // feedback...
+  if (hasSelectionToolMask()) {
+    m_selectionToolMaskBoundaries->regen(m_selectionToolMask.get());
+    drawMaskBoundaries(g, *m_selectionToolMaskBoundaries, 0);
+
+    const gfx::Point prevPoint(m_selectionToolMask->bounds().point2());
+    if (prevPoint.x >= m_sprite->width() || prevPoint.y >= m_sprite->height())
+      redrawBackground = true;
+  }
 
   // Post-render decorator.
   if ((m_flags & kShowDecorators) && m_decorator) {
@@ -1030,7 +1076,7 @@ void Editor::drawSpriteClipped(const gfx::Region& updateRegion)
 
   Display* display = this->display();
   // TODO clip the editorGraphics directly
-  Graphics backGraphics(display, display->backLayer()->surface(), 0, 0);
+  Graphics backGraphics(display);
   GraphicsPtr editorGraphics = getGraphics(clientBounds());
 
   for (const Rect& updateRect : updateRegion) {
@@ -1042,13 +1088,7 @@ void Editor::drawSpriteClipped(const gfx::Region& updateRegion)
   }
 }
 
-/**
- * Draws the boundaries, really this routine doesn't use the "mask"
- * field of the sprite, only the "bound" field (so you can have other
- * mask in the sprite and could be showed other boundaries), to
- * regenerate boundaries, use the sprite_generate_mask_boundaries()
- * routine.
- */
+// Draws the current sprite mask boundaries (the active selection).
 void Editor::drawMask(Graphics* g)
 {
   if ((m_flags & kShowMask) == 0 || !m_docPref.show.selectionEdges())
@@ -1056,18 +1096,22 @@ void Editor::drawMask(Graphics* g)
 
   ASSERT(m_document->hasMaskBoundaries());
 
+  drawMaskBoundaries(g, m_document->maskBoundaries(), m_antsOffset);
+}
+
+void Editor::drawMaskBoundaries(ui::Graphics* g, doc::MaskBoundaries& segs, const int antsOffset)
+{
   gfx::Point pt = mainTilePosition();
   pt.x = m_padding.x + m_proj.applyX(pt.x);
   pt.y = m_padding.y + m_proj.applyY(pt.y);
 
   // Create the mask boundaries path
-  auto& segs = m_document->maskBoundaries();
   segs.createPathIfNeeeded();
 
   ui::Paint paint;
   paint.style(ui::Paint::Stroke);
   set_checkered_paint_mode(paint,
-                           m_antsOffset,
+                           antsOffset,
                            gfx::rgba(0, 0, 0, 255),
                            gfx::rgba(255, 255, 255, 255));
 
@@ -1081,10 +1125,11 @@ void Editor::drawMask(Graphics* g)
 
 void Editor::drawMaskSafe()
 {
-  if ((m_flags & kShowMask) == 0)
+  if (((m_flags & kShowMask) == 0 && !hasSelectionToolMask()) || !(isVisible() && m_document))
     return;
 
-  if (isVisible() && m_document && m_document->hasMaskBoundaries()) {
+  const bool haveSegs = m_document->hasMaskBoundaries();
+  if (haveSegs || hasSelectionToolMask()) {
     Region region;
     getDrawableRegion(region, kCutTopWindows);
     region.offset(-bounds().origin());
@@ -1092,10 +1137,21 @@ void Editor::drawMaskSafe()
     HideBrushPreview hide(m_brushPreview);
     GraphicsPtr g = getGraphics(clientBounds());
 
-    for (const gfx::Rect& rc : region) {
-      IntersectClip clip(g.get(), rc);
-      if (clip)
-        drawMask(g.get());
+    if (haveSegs) {
+      for (const gfx::Rect& rc : region) {
+        IntersectClip clip(g.get(), rc);
+        if (clip)
+          drawMask(g.get());
+      }
+    }
+
+    if (hasSelectionToolMask()) {
+      m_selectionToolMaskBoundaries->regen(m_selectionToolMask.get());
+      for (const gfx::Rect& rc : region) {
+        IntersectClip clip(g.get(), rc);
+        if (clip)
+          drawMaskBoundaries(g.get(), *m_selectionToolMaskBoundaries, 0);
+      }
     }
   }
 }
@@ -1994,6 +2050,23 @@ void Editor::showUnhandledException(const std::exception& ex, const ui::Message*
                  (state ? typeid(*state).name() : "None"));
 }
 
+void Editor::makeSelectionToolMask()
+{
+  m_selectionToolMask = std::make_unique<Mask>();
+  m_selectionToolMaskBoundaries = std::make_unique<MaskBoundaries>();
+}
+
+void Editor::deleteSelectionToolMask()
+{
+  m_selectionToolMask.reset();
+  m_selectionToolMaskBoundaries.reset();
+}
+
+bool Editor::hasSelectionToolMask()
+{
+  return m_selectionToolMask && !m_selectionToolMask->isEmpty();
+}
+
 //////////////////////////////////////////////////////////////////////
 // Message handler for the editor
 
@@ -2353,7 +2426,7 @@ void Editor::onPaint(ui::PaintEvent& ev)
       // Draw the sprite in the editor
       renderChrono.reset();
       drawBackground(g);
-      drawSpriteUnclippedRect(g, gfx::Rect(0, 0, m_sprite->width(), m_sprite->height()));
+      drawSpriteUnclippedRect(g, m_sprite->bounds());
       renderElapsed = renderChrono.elapsed();
 
 #if ENABLE_DEVMODE
@@ -2535,6 +2608,16 @@ void Editor::onBeforeLayerEditableChange(DocEvent& ev, bool newState)
 {
   if (m_state)
     m_state->onBeforeLayerEditableChange(this, ev.layer(), newState);
+}
+
+void Editor::onBeforeSlicesDuplication(DocEvent& ev)
+{
+  clearSlicesSelection();
+}
+
+void Editor::onSliceDuplicated(DocEvent& ev)
+{
+  selectSlice(ev.slice());
 }
 
 void Editor::setCursor(const gfx::Point& mouseDisplayPos)
@@ -2735,7 +2818,7 @@ void Editor::pasteImage(const Image* image, const Mask* mask, const gfx::Point* 
   ASSERT(image);
 
   std::unique_ptr<Mask> temp_mask;
-  if (!mask) {
+  if (!mask || mask->bounds().isEmpty()) {
     gfx::Rect visibleBounds = getVisibleSpriteBounds();
     gfx::Rect imageBounds = image->bounds();
 

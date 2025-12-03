@@ -787,7 +787,7 @@ bool Manager::handleWindowZOrder()
   }
 
   // Put the focus
-  setFocus(mouse_widget);
+  setFocus(mouse_widget, FocusMessage::Source::Mouse);
   return true;
 }
 
@@ -881,6 +881,13 @@ void Manager::dispatchMessages()
   }
 }
 
+void Manager::flushMessages() const
+{
+  // Send a dummy event just to break the waiting loop.
+  os::Event evt;
+  m_eventQueue->queueEvent(evt);
+}
+
 void Manager::addToGarbage(Widget* widget)
 {
   ASSERT(widget);
@@ -947,7 +954,7 @@ Widget* Manager::getCapture()
   return capture_widget;
 }
 
-void Manager::setFocus(Widget* widget)
+void Manager::setFocus(Widget* widget, FocusMessage::Source source)
 {
   if ((focus_widget != widget) &&
       (!(widget) || (!(widget->hasFlags(DISABLED)) && !(widget->hasFlags(HIDDEN)) &&
@@ -957,7 +964,7 @@ void Manager::setFocus(Widget* widget)
 
     // Fetch the focus
     if (focus_widget && focus_widget != commonAncestor) {
-      auto* msg = new FocusMessage(kFocusLeaveMessage, oldFocus, widget);
+      auto* msg = new FocusMessage(kFocusLeaveMessage, oldFocus, widget, source);
       msg->setRecipient(focus_widget);
       msg->setPropagateToParent(true);
       msg->setCommonAncestor(commonAncestor);
@@ -974,7 +981,7 @@ void Manager::setFocus(Widget* widget)
     // Put the focus
     focus_widget = widget;
     if (widget) {
-      auto* msg = new FocusMessage(kFocusEnterMessage, oldFocus, widget);
+      auto* msg = new FocusMessage(kFocusEnterMessage, oldFocus, widget, source);
       msg->setRecipient(widget);
       msg->setPropagateToParent(true);
       msg->setCommonAncestor(commonAncestor);
@@ -1096,14 +1103,14 @@ void Manager::attractFocus(Widget* widget)
 
   // If magnetic widget exists and it doesn't have the focus
   if (magnet && !magnet->hasFocus())
-    setFocus(magnet);
+    setFocus(magnet, FocusMessage::Source::Window);
 }
 
 void Manager::focusFirstChild(Widget* widget)
 {
   for (Widget* it = widget->window(); it; it = next_widget(it)) {
     if (does_accept_focus(it) && !(child_accept_focus(it, true))) {
-      setFocus(it);
+      setFocus(it, FocusMessage::Source::Window);
       break;
     }
   }
@@ -1433,7 +1440,7 @@ void Manager::_openWindow(Window* window, bool center)
         changeFrame = false;
       }
 
-      limit_with_workarea(parentDisplay, frame);
+      limit_least(frame);
 
       spec.position(os::WindowSpec::Position::Frame);
       spec.frame(frame);
@@ -2049,80 +2056,57 @@ bool Manager::sendMessageToWidget(Message* msg, Widget* widget)
   return used;
 }
 
-Widget* Manager::findForDragAndDrop(Widget* widget)
-{
-  // If widget doesn't support drag & drop, try to find the nearest ancestor
-  // that supports it.
-  while (widget && !widget->hasFlags(ALLOW_DROP))
-    widget = widget->parent();
-
-  return widget;
-}
-
 void Manager::dragEnter(os::DragEvent& ev)
 {
-  Widget* widget = findForDragAndDrop(pick(ev.position()));
-
-  ASSERT(!widget || widget && widget->hasFlags(ALLOW_DROP));
+  Widget* widget = pick(ev.position());
 
   if (widget) {
-    m_dragOverWidget = widget;
-    DragEvent uiev(this, widget, ev);
-    widget->onDragEnter(uiev);
-    ev.dropResult(uiev.supportsOperation());
+    DragEnterMessage msg(ev);
+    msg.setPropagateToParent(true);
+    if (widget->sendMessage(&msg))
+      m_dragOverWidget = msg.widget();
   }
 }
 
 void Manager::dragLeave(os::DragEvent& ev)
 {
-  Widget* widget = m_dragOverWidget;
-  if (widget) {
-    DragEvent uiev(this, widget, ev);
-    widget->onDragLeave(uiev);
+  if (m_dragOverWidget) {
+    DragLeaveMessage msg(ev);
+    m_dragOverWidget->sendMessage(&msg);
     m_dragOverWidget = nullptr;
   }
 }
 
 void Manager::drag(os::DragEvent& ev)
 {
-  Widget* widget = findForDragAndDrop(pick(ev.position()));
-
-  ASSERT(!widget || widget && widget->hasFlags(ALLOW_DROP));
-
-  if (m_dragOverWidget && m_dragOverWidget != widget) {
-    DragEvent uiev(this, m_dragOverWidget, ev);
-    m_dragOverWidget->onDragLeave(uiev);
-    m_dragOverWidget = nullptr;
-  }
-
+  Widget* widget = pick(ev.position());
+  bool handled = false;
   if (widget) {
-    DragEvent uiev(this, widget, ev);
-    if (m_dragOverWidget != widget) {
-      m_dragOverWidget = widget;
-      widget->onDragEnter(uiev);
-    }
-    widget->onDrag(uiev);
-    ev.dropResult(uiev.supportsOperation());
+    DragMessage msg(ev);
+    msg.widget(m_dragOverWidget);
+    msg.setPropagateToParent(true);
+    handled = widget->sendMessage(&msg);
+    m_dragOverWidget = msg.widget();
   }
+
+  // If there wasn't any widget able to handle the DragMessage then just send
+  // a DragLeaveMessage to the last widget that processed a DragMessage.
+  if (!handled)
+    dragLeave(ev);
 }
 
 void Manager::drop(os::DragEvent& ev)
 {
   m_dragOverWidget = nullptr;
-  Widget* widget = findForDragAndDrop(pick(ev.position()));
-
-  ASSERT(!widget || widget && widget->hasFlags(ALLOW_DROP));
-
-  DragEvent uiev(this, widget, ev);
-  while (widget) {
-    widget->onDrop(uiev);
-    if (uiev.handled()) {
+  Widget* widget = pick(ev.position());
+  if (widget) {
+    DropMessage msg(ev);
+    msg.setPropagateToParent(true);
+    // If the message was handled
+    if (widget->sendMessage(&msg)) {
       ev.acceptDrop(true);
       return;
     }
-    // Propagate unhandled drop events to ancestors.
-    // TODO: Should we propagate dragEnter, dragLeave and drag events too?
-    widget = findForDragAndDrop(widget->parent());
   }
 
   // There were no widget that accepted the drop, then see if we can treat it
@@ -2454,7 +2438,7 @@ bool Manager::processFocusMovementMessage(Message* msg)
     }
 
     if ((focus) && (focus != focus_widget))
-      setFocus(focus);
+      setFocus(focus, FocusMessage::Source::Keyboard);
   }
 
   return ret;

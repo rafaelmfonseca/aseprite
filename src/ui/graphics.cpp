@@ -47,6 +47,22 @@ Graphics::Graphics(Display* display, const os::SurfaceRef& surface, int dx, int 
 {
 }
 
+Graphics::Graphics(Display* display)
+  : m_display(display)
+  , m_surface(display->backLayer()->surface())
+  , m_dx(0)
+  , m_dy(0)
+{
+}
+
+Graphics::Graphics(const os::SurfaceRef& surface)
+  : m_display(nullptr)
+  , m_surface(surface)
+  , m_dx(0)
+  , m_dy(0)
+{
+}
+
 Graphics::~Graphics()
 {
   // If we were drawing in the screen surface, we mark these regions
@@ -495,10 +511,10 @@ gfx::Size Graphics::doUIStringAlgorithm(const std::string& str,
 
   gfx::Point pt(0, rc.y);
 
-  if ((align & (MIDDLE | BOTTOM)) != 0) {
-    text::FontMetrics metrics;
-    m_font->metrics(&metrics);
+  text::FontMetrics metrics;
+  m_font->metrics(&metrics);
 
+  if ((align & (MIDDLE | BOTTOM)) != 0) {
     if (align & MIDDLE) {
       pt.y = rc.y + rc.h / 2 + metrics.ascent;
     }
@@ -582,31 +598,40 @@ gfx::Size Graphics::doUIStringAlgorithm(const std::string& str,
     else
       line = str.substr(beg);
 
-    gfx::Size lineSize(m_font->textLength(line), m_font->lineHeight() + lineSeparation);
-    calculatedSize.w = std::max(calculatedSize.w, lineSize.w);
+    text::TextBlobRef lineBlob =
+      text::TextBlob::MakeWithShaper(get_theme()->fontMgr(), m_font, line);
+    gfx::SizeF lineSize;
+    if (lineBlob) {
+      lineSize = lineBlob->bounds().size();
+      lineSize.h += lineSeparation;
+      calculatedSize.w = std::max<int>(calculatedSize.w, std::ceil(lineSize.w));
 
-    // Render the text
-    if (draw) {
-      int xout;
-      if ((align & CENTER) == CENTER)
-        xout = pt.x + rc.w / 2 - lineSize.w / 2;
-      else if ((align & RIGHT) == RIGHT)
-        xout = pt.x + rc.w - lineSize.w;
-      else
-        xout = pt.x;
+      // Render the text
+      if (draw) {
+        int xout;
+        if ((align & CENTER) == CENTER)
+          xout = pt.x + rc.w / 2 - lineSize.w / 2;
+        else if ((align & RIGHT) == RIGHT)
+          xout = pt.x + rc.w - lineSize.w;
+        else
+          xout = pt.x;
 
-      if (!line.empty())
-        drawText(line, fg, bg, gfx::Point(xout, pt.y));
+        Paint paint;
+        paint.style(os::Paint::Fill);
+        if (!gfx::is_transparent(bg)) {
+          paint.color(bg);
+          drawRect(gfx::RectF(xout, pt.y, rc.w, lineSize.h), paint);
+        }
+        paint.color(fg);
 
-      if (!gfx::is_transparent(bg)) {
-        fillAreaBetweenRects(bg,
-                             gfx::Rect(rc.x, pt.y, rc.w, lineSize.h),
-                             gfx::Rect(xout, pt.y, lineSize.w, lineSize.h));
+        float baselineDelta = -metrics.ascent - lineBlob->baseline();
+        drawTextBlob(lineBlob, gfx::PointF(xout, pt.y + baselineDelta), paint);
       }
+
+      pt.y += lineSize.h;
+      calculatedSize.h += lineSize.h;
     }
 
-    pt.y += lineSize.h;
-    calculatedSize.h += lineSize.h;
     beg = newBeg;
 
     if (pt.y + lineSize.h >= rc.y2())

@@ -1,5 +1,5 @@
 // Aseprite
-// Copyright (C) 2018-2024  Igara Studio S.A.
+// Copyright (C) 2018-2025  Igara Studio S.A.
 // Copyright (C) 2001-2018  David Capello
 //
 // This program is distributed under the terms of
@@ -464,8 +464,7 @@ bool StandbyState::onKeyDown(Editor* editor, KeyMessage* msg)
       checkStartDrawingStraightLine(editor, nullptr, nullptr))
     return false;
 
-  Keys keys = KeyboardShortcuts::instance()->getDragActionsFromKeyMessage(KeyContext::MouseWheel,
-                                                                          msg);
+  Keys keys = KeyboardShortcuts::instance()->getDragActionsFromKeyMessage(msg);
   if (editor->hasMouse() && !keys.empty()) {
     // Don't enter DraggingValueState to change brush size if we are
     // in a selection-like tool
@@ -750,9 +749,9 @@ void StandbyState::transformSelection(Editor* editor, MouseMessage* msg, HandleT
                                                         document->mask(),
                                                         "Transformation"));
 
-    // If the Ctrl key is pressed start dragging a copy of the selection
+    // If the Ctrl key is pressed and there is a handle, start dragging a copy of the selection
     EditorCustomizationDelegate* customization = editor->getCustomizationDelegate();
-    if ((customization) &&
+    if (handle != NoHandle && customization &&
         int(customization->getPressedKeyAction(KeyContext::TranslatingSelection) &
             KeyAction::CopySelection))
       pixelsMovement->copyMask();
@@ -1000,7 +999,7 @@ void StandbyState::Decorator::postRenderDecorator(EditorPostRender* render)
   if (StandbyState::Decorator::getSymmetryHandles(editor, handles)) {
     auto theme = skin::SkinTheme::get(editor);
     os::Surface* part = theme->parts.transformationHandle()->bitmap(0);
-    ui::Graphics g(editor->display(), editor->display()->backLayer()->surface(), 0, 0);
+    ui::Graphics g(editor->display());
     for (const auto& handle : handles)
       g.drawRgbaSurface(part, handle.bounds.x, handle.bounds.y);
   }
