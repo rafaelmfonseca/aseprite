@@ -49,6 +49,7 @@ class LoggerModule;
 class MainWindow;
 class Preferences;
 class RecentFiles;
+class FavoriteFolders;
 class Timeline;
 class Workspace;
 
@@ -90,6 +91,7 @@ public:
   tools::Tool* activeTool() const;
   tools::ActiveToolManager* activeToolManager() const;
   RecentFiles* recentFiles() const;
+  FavoriteFolders* favoriteFolders() const;
   MainWindow* mainWindow() const { return m_mainWindow.get(); }
   Workspace* workspace() const;
   ContextBar* contextBar() const;

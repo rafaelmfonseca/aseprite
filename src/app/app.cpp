@@ -38,6 +38,7 @@
 #include "app/modules/palettes.h"
 #include "app/pref/preferences.h"
 #include "app/recent_files.h"
+#include "app/favorite_folders.h"
 #include "app/resource_finder.h"
 #include "app/send_crash.h"
 #include "app/site.h"
@@ -137,6 +138,7 @@ public:
   tools::ActiveToolManager m_activeToolManager;
   Commands m_commands;
   RecentFiles m_recent_files;
+  FavoriteFolders m_favorite_folders;
   InputChain m_inputChain;
   Clipboard m_clipboard;
 #ifdef ENABLE_DATA_RECOVERY
@@ -151,6 +153,7 @@ public:
     , m_strings(pref, m_extensions)
     , m_activeToolManager(&m_toolbox)
     , m_recent_files(pref.general.recentItems())
+    , m_favorite_folders()
 #ifdef ENABLE_DATA_RECOVERY
     , m_recovery(nullptr)
 #endif
@@ -710,6 +713,12 @@ RecentFiles* App::recentFiles() const
 {
   ASSERT(m_modules != nullptr);
   return &m_modules->m_recent_files;
+}
+
+FavoriteFolders* App::favoriteFolders() const
+{
+  ASSERT(m_modules != nullptr);
+  return &m_modules->m_favorite_folders;
 }
 
 Workspace* App::workspace() const
